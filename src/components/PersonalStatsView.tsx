@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserStats, SubjectId, TestSession } from '../types/nmt';
-import { SUBJECT_METADATA, formatTime, getScoreDescriptor } from '../utils/scoring';
+import { SUBJECT_METADATA, formatTime, getScoreDescriptor, getCurrentNmtYear } from '../utils/scoring';
 import {
   Flame,
   Award,
@@ -40,6 +40,7 @@ export const PersonalStatsView: React.FC<PersonalStatsViewProps> = ({
   const [confirmClear, setConfirmClear] = useState<boolean>(false);
 
   const subjects: SubjectId[] = ['ukr', 'math', 'history', 'eng'];
+  const nmtYear = getCurrentNmtYear();
 
   // Calculate composite predicted score across subjects that have at least 1 test
   const activeSubjectScores = subjects
@@ -127,7 +128,7 @@ export const PersonalStatsView: React.FC<PersonalStatsViewProps> = ({
                 )}
               </div>
               <div className="text-xs text-zinc-500 mt-0.5">
-                Підготовка до Національного мультипредметного тесту 2027
+                Підготовка до Національного мультипредметного тесту {nmtYear}
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { SubjectId, UserStats, Question } from '../types/nmt';
 import { NMT_QUESTIONS } from '../data/questions';
-import { SUBJECT_METADATA, getScoreDescriptor } from '../utils/scoring';
+import { SUBJECT_METADATA, getScoreDescriptor, getCurrentNmtYear } from '../utils/scoring';
 import { TopicTestBuilder } from './TopicTestBuilder';
 import {
   BookOpen,
@@ -95,6 +95,7 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
 
   const subjects: SubjectId[] = ['ukr', 'math', 'history', 'eng'];
   const mistakeCount = userStats.mistakeQuestionIds.length;
+  const nmtYear = getCurrentNmtYear();
 
   // Find best full simulation in history if any
   const simulationHistory = userStats.history.filter((h) => h.mode === 'simulation');
@@ -181,7 +182,7 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
             <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-600">
               <span className="font-bold text-zinc-950 uppercase tracking-wider flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                Повна симуляція НМТ 2027
+                Повна симуляція НМТ {nmtYear}
               </span>
               <span>·</span>
               <span>Усі 4 обов’язкові предмети ({simQuestionsPerSub * 4} завдань)</span>

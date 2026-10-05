@@ -123,6 +123,37 @@ export function formatTime(seconds: number): string {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
+/**
+ * Automatically determines the upcoming NMT exam year and target session start date.
+ * Baseline is 2027; once the May 18, 10:00 EEST session date of year Y passes,
+ * the entire platform and countdown automatically roll over to year Y + 1 (2028, 2029, etc.).
+ */
+export function getDynamicNmtSchedule(now: Date = new Date()): {
+  nmtYear: number;
+  targetDateMs: number;
+  targetDateIso: string;
+} {
+  let candidateYear = Math.max(2027, now.getFullYear());
+  let targetIso = `${candidateYear}-05-18T10:00:00+03:00`;
+  let targetMs = new Date(targetIso).getTime();
+
+  while (now.getTime() >= targetMs) {
+    candidateYear += 1;
+    targetIso = `${candidateYear}-05-18T10:00:00+03:00`;
+    targetMs = new Date(targetIso).getTime();
+  }
+
+  return {
+    nmtYear: candidateYear,
+    targetDateMs: targetMs,
+    targetDateIso: targetIso,
+  };
+}
+
+export function getCurrentNmtYear(now: Date = new Date()): number {
+  return getDynamicNmtSchedule(now).nmtYear;
+}
+
 export function getScoreDescriptor(score: number): { label: string; textClass: string; desc: string } {
   if (score >= 190) return { label: 'Відмінно', textClass: 'text-emerald-700 font-semibold', desc: 'Високий шанс вступити на бюджет у будь-який топ-ВНЗ' };
   if (score >= 175) return { label: 'Дуже добре', textClass: 'text-emerald-600 font-semibold', desc: 'Гарний конкурентний результат для більшості спеціальностей' };

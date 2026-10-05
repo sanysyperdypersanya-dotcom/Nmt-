@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SubjectId } from '../types/nmt';
 import { REFERENCE_MATERIALS } from '../data/referenceMaterials';
-import { SUBJECT_METADATA } from '../utils/scoring';
+import { SUBJECT_METADATA, getCurrentNmtYear } from '../utils/scoring';
 import {
   X,
   Search,
@@ -36,6 +36,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({
 
   const currentCategory = REFERENCE_MATERIALS.find((r) => r.subjectId === activeSubject);
   const currentSubjectMeta = SUBJECT_METADATA[activeSubject];
+  const nmtYear = getCurrentNmtYear();
 
   const subjects: SubjectId[] = ['math', 'ukr', 'eng', 'history'];
 
@@ -142,7 +143,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <h1 className="text-sm sm:text-lg font-extrabold text-zinc-950 leading-tight">
-                        Теорія та Довідкові матеріали НМТ 2027
+                        Теорія та Довідкові матеріали НМТ {nmtYear}
                       </h1>
                       <span className="hidden md:inline-block text-[11px] font-mono bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-md">
                         Повноекранний конспект

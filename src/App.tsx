@@ -14,6 +14,7 @@ import {
 } from './types/nmt';
 import { NMT_QUESTIONS } from './data/questions';
 import { pickSmartShuffledQuestions } from './utils/questionRandomizer';
+import { getCurrentNmtYear } from './utils/scoring';
 import {
   loadUserStats,
   saveUserStats,
@@ -47,6 +48,7 @@ import {
 } from 'lucide-react';
 
 export default function App() {
+  const nmtYear = getCurrentNmtYear();
   const [registrations, setRegistrations] = useState<SiteRegistration[]>(() =>
     loadSiteRegistrations(loadUserStats())
   );
@@ -172,12 +174,13 @@ export default function App() {
     }
   }, [uiSettings]);
 
-  // Cleanup audio on unmount
+  // Cleanup audio on unmount & sync document title with dynamic NMT year
   useEffect(() => {
+    document.title = `НМТ ${nmtYear} Тренажер — Тести та Персональна Статистика`;
     return () => {
       ambientAudio.stop();
     };
-  }, []);
+  }, [nmtYear]);
 
   // Handler to start a single-subject test (Full NMT variant, Blitz of 5 questions, or single Topic test)
   const handleStartTest = (
@@ -699,7 +702,7 @@ export default function App() {
       {!isZenMode && (
         <footer className="border-t border-zinc-200 bg-white py-6 mt-12 text-center text-xs text-zinc-500">
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p>© 2027 НМТ Тренажер · Створено для підготовки українських абітурієнтів</p>
+            <p>© {nmtYear} НМТ Тренажер · Створено для підготовки українських абітурієнтів</p>
             <div className="flex items-center gap-4 text-zinc-600">
               <span>Історія України</span>
               <span>·</span>

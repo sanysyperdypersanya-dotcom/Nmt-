@@ -16,7 +16,7 @@ import {
   Check,
   Lock,
 } from 'lucide-react';
-import { formatTime } from '../utils/scoring';
+import { formatTime, getDynamicNmtSchedule, getCurrentNmtYear } from '../utils/scoring';
 import { UISettings, ThemeMode, SiteRegistration } from '../types/nmt';
 
 interface HeaderTimerProps {
@@ -44,8 +44,8 @@ export const HeaderTimer: React.FC<HeaderTimerProps> = ({
   activeAccountId,
   onQuickSwitchAccount,
 }) => {
-  // 1. Live Countdown to official NMT 2027 session (Starts approx. May 18, 2027 10:00:00 EEST)
-  const targetDate = new Date('2027-05-18T10:00:00+03:00').getTime();
+  // 1. Live Countdown to official NMT session (Automatically rolls over every year: 2027 -> 2028 -> 2029...)
+  const [nmtYear, setNmtYear] = useState<number>(() => getCurrentNmtYear());
 
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
@@ -67,7 +67,9 @@ export const HeaderTimer: React.FC<HeaderTimerProps> = ({
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date();
-      const diff = Math.max(0, targetDate - now.getTime());
+      const schedule = getDynamicNmtSchedule(now);
+      setNmtYear(schedule.nmtYear);
+      const diff = Math.max(0, schedule.targetDateMs - now.getTime());
 
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
@@ -94,7 +96,7 @@ export const HeaderTimer: React.FC<HeaderTimerProps> = ({
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [targetDate]);
+  }, []);
 
   // Study timer interval
   useEffect(() => {
@@ -146,7 +148,7 @@ export const HeaderTimer: React.FC<HeaderTimerProps> = ({
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
               </span>
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-zinc-100">До старту основної сесії НМТ 2027:</span>
+                <span className="font-semibold text-zinc-100">До старту основної сесії НМТ {nmtYear}:</span>
                 <span className="text-zinc-400 hidden sm:inline">·</span>
                 <span className="text-xs text-zinc-400 font-mono hidden sm:inline">{currentDateTime}</span>
               </div>
@@ -252,7 +254,7 @@ export const HeaderTimer: React.FC<HeaderTimerProps> = ({
             <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-extrabold text-xs">
               НМТ
             </div>
-            <span className="text-sm font-bold text-zinc-950">Тренажер НМТ 2027</span>
+            <span className="text-sm font-bold text-zinc-950">Тренажер НМТ {nmtYear}</span>
           </button>
 
           <button
@@ -280,7 +282,7 @@ export const HeaderTimer: React.FC<HeaderTimerProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-bold tracking-tight text-zinc-950 group-hover:text-zinc-700 transition-colors">
-                    Тренажер НМТ 2027
+                    Тренажер НМТ {nmtYear}
                   </h1>
                   <span className="text-xs text-zinc-500 hidden sm:inline">·</span>
                   <span className="text-xs font-medium text-emerald-700 hidden sm:inline">

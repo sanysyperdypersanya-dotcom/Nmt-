@@ -5,6 +5,7 @@ import {
   SubjectId,
 } from '../types/nmt';
 import { createBlankUserStats } from '../utils/storage';
+import { getCurrentNmtYear } from '../utils/scoring';
 import {
   UserPlus,
   CheckCircle2,
@@ -69,6 +70,7 @@ export const ParticipantRegistrationView: React.FC<ParticipantRegistrationViewPr
 
   const activeAccount =
     registrations.find((r) => r.id === activeAccountId) || registrations[0];
+  const nmtYear = getCurrentNmtYear();
 
   const handleCreateAccount = (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,7 +192,7 @@ export const ParticipantRegistrationView: React.FC<ParticipantRegistrationViewPr
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `nmt_2027_accounts_report.csv`);
+    link.setAttribute('download', `nmt_${nmtYear}_accounts_report.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -205,7 +207,7 @@ export const ParticipantRegistrationView: React.FC<ParticipantRegistrationViewPr
           <div className="space-y-2.5 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
               <Building2 className="w-3.5 h-3.5" />
-              <span>Мультиакаунт-Система · НМТ 2027</span>
+              <span>Мультиакаунт-Система · НМТ {nmtYear}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
               Керування акаунтами учасників на одному пристрої
