@@ -46,18 +46,22 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({
     eng: <Globe className="w-4 h-4 text-violet-600" />,
   };
 
+  // Normalize string by stripping combining acute accent marks so plain search matches stressed words
+  const normalizeForSearch = (str: string) =>
+    str.toLowerCase().replace(/\u0301/g, '');
+
   // Filter sections by selected section tab and search query
   const filteredSections =
     currentCategory?.sections
       .filter((section) => activeSectionTitle === 'ALL' || section.title === activeSectionTitle)
       .map((section) => {
         if (!searchQuery.trim()) return section;
-        const query = searchQuery.toLowerCase();
+        const query = normalizeForSearch(searchQuery.trim());
         const matchingItems = section.items.filter(
           (item) =>
-            item.label.toLowerCase().includes(query) ||
-            item.formulaOrValue.toLowerCase().includes(query) ||
-            (item.note && item.note.toLowerCase().includes(query))
+            normalizeForSearch(item.label).includes(query) ||
+            normalizeForSearch(item.formulaOrValue).includes(query) ||
+            (item.note && normalizeForSearch(item.note).includes(query))
         );
         return {
           ...section,

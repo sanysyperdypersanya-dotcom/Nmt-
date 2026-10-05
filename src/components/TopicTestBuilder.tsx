@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SubjectId, Question, UserStats } from '../types/nmt';
 import { NMT_QUESTIONS } from '../data/questions';
 import { SUBJECT_METADATA } from '../utils/scoring';
+import { pickBalancedSmartTopicQuestions } from '../utils/questionRandomizer';
 import {
   Wrench,
   CheckSquare,
@@ -140,41 +141,17 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
     setSelectedTopics([firstTopic]);
   };
 
-  // Balanced selection across chosen topics and unification into 1 test
+  // Balanced selection across chosen topics with smart anti-repetition shuffling
   const handleGenerateAndStart = () => {
     if (selectedTopics.length === 0 || questionCount < 1) return;
 
-    // Group available questions by topic so every chosen topic is represented proportionally
-    const byTopic: Record<string, Question[]> = {};
-    selectedTopics.forEach((t) => {
-      const qs = NMT_QUESTIONS.filter(
-        (q) =>
-          q.subjectId === selectedSubject &&
-          q.topic === t &&
-          matchesSource(q, sourceFilter)
-      );
-      byTopic[t] = shuffleOrder ? [...qs].sort(() => 0.5 - Math.random()) : [...qs];
-    });
-
-    const picked: Question[] = [];
-    let round = 0;
-    while (picked.length < questionCount) {
-      let addedInRound = false;
-      for (const t of selectedTopics) {
-        if (picked.length >= questionCount) break;
-        const candidate = byTopic[t]?.[round];
-        if (candidate) {
-          picked.push(candidate);
-          addedInRound = true;
-        }
-      }
-      if (!addedInRound) break;
-      round++;
-    }
-
-    const finalQuestions = shuffleOrder
-      ? [...picked].sort(() => 0.5 - Math.random())
-      : picked;
+    const finalQuestions = pickBalancedSmartTopicQuestions(
+      availablePool,
+      selectedTopics,
+      questionCount,
+      shuffleOrder,
+      userStats
+    );
 
     const autoMinutes = Math.max(5, Math.min(60, Math.ceil(finalQuestions.length * 1.8)));
 

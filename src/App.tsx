@@ -13,6 +13,7 @@ import {
   SiteRegistration,
 } from './types/nmt';
 import { NMT_QUESTIONS } from './data/questions';
+import { pickSmartShuffledQuestions } from './utils/questionRandomizer';
 import {
   loadUserStats,
   saveUserStats,
@@ -178,7 +179,7 @@ export default function App() {
     };
   }, []);
 
-  // Handler to start a single-subject test (Full, Blitz of 5 questions, or single Topic test)
+  // Handler to start a single-subject test (Full NMT variant, Blitz of 5 questions, or single Topic test)
   const handleStartTest = (
     subjectId: SubjectId,
     mode: 'full' | 'blitz' | 'topic',
@@ -186,13 +187,18 @@ export default function App() {
     overrideTimed?: boolean,
     overrideMinutes?: number
   ) => {
-    let pool = NMT_QUESTIONS.filter((q) => q.subjectId === subjectId);
+    const subjectPool = NMT_QUESTIONS.filter((q) => q.subjectId === subjectId);
+    let pool: Question[] = [];
 
     if (mode === 'topic' && topicFilter) {
-      pool = pool.filter((q) => q.topic === topicFilter);
+      const topicPool = subjectPool.filter((q) => q.topic === topicFilter);
+      pool = pickSmartShuffledQuestions(topicPool, undefined, userStats);
     } else if (mode === 'blitz') {
-      // Strictly 5 questions for Blitz test
-      pool = [...pool].sort(() => 0.5 - Math.random()).slice(0, 5);
+      // Strictly 5 smart-shuffled questions with anti-repetition cooldown
+      pool = pickSmartShuffledQuestions(subjectPool, 5, userStats);
+    } else {
+      // Standard 25-question NMT block variant drawn from the full subject bank with anti-repetition memory
+      pool = pickSmartShuffledQuestions(subjectPool, 25, userStats);
     }
 
     if (pool.length === 0) return;
@@ -299,7 +305,7 @@ export default function App() {
     const orderedSubjects: SubjectId[] = ['ukr', 'math', 'history', 'eng'];
     const pool = orderedSubjects.flatMap((sId) => {
       const subPool = NMT_QUESTIONS.filter((q) => q.subjectId === sId);
-      return subPool.slice(0, perSub);
+      return pickSmartShuffledQuestions(subPool, perSub, userStats);
     });
 
     if (pool.length === 0) return;
@@ -338,7 +344,8 @@ export default function App() {
     const mistakeIds = userStats.mistakeQuestionIds;
     if (mistakeIds.length === 0) return;
 
-    const pool = NMT_QUESTIONS.filter((q) => mistakeIds.includes(q.id));
+    const rawPool = NMT_QUESTIONS.filter((q) => mistakeIds.includes(q.id));
+    const pool = pickSmartShuffledQuestions(rawPool, undefined, userStats);
     if (pool.length === 0) return;
 
     const firstSub = pool[0].subjectId;
@@ -633,6 +640,26 @@ export default function App() {
                 durationMinutes: Math.round((reviewSession.timeLimitSeconds || 240 * 60) / 60),
                 structure,
                 questionsPerSubject: Math.round(reviewSession.questions.length / 4) || 25,
+              });
+            } else if (reviewSession.id.startsWith('custom-')) {
+              const sessionTopics = Array.from(
+                new Set(reviewSession.questions.map((q) => q.topic))
+              );
+              const candidatePool = NMT_QUESTIONS.filter(
+                (q) => q.subjectId === currentSub && sessionTopics.includes(q.topic)
+              );
+              const freshQuestions = pickSmartShuffledQuestions(
+                candidatePool,
+                reviewSession.questions.length,
+                userStats
+              );
+              handleStartCustomTopicTest({
+                subjectId: currentSub,
+                selectedTopics: sessionTopics,
+                questions: freshQuestions,
+                isTimed: wasTimed,
+                durationMinutes: Math.round((reviewSession.timeLimitSeconds || 30 * 60) / 60),
+                enterZenMode: isZenMode,
               });
             } else {
               handleStartTest(

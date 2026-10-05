@@ -566,10 +566,11 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
                     type="button"
                     onClick={() => onStartTest(subId, 'full')}
                     className="flex-1 min-w-[135px] flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold transition-colors shadow-xs"
+                    title={`Автоматичний вибір 25 неповторюваних завдань із ${subjectQuestionCount} доступних у базі`}
                   >
                     <Play className="w-3.5 h-3.5 fill-white" />
                     <span>
-                      Повний тест ({subjectQuestionCount} пит.)
+                      Новий варіант (25 пит.)
                     </span>
                   </button>
 
