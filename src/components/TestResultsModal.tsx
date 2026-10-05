@@ -66,7 +66,7 @@ export const TestResultsModal: React.FC<TestResultsModalProps> = ({
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
             {isSimulation
-              ? 'Сертифікат симуляції НМТ 2026'
+              ? 'Сертифікат симуляції НМТ 2027'
               : 'Результати тестування'}
           </h2>
           <div className="text-xs text-zinc-500 flex flex-wrap items-center justify-center gap-2">

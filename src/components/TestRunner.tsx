@@ -345,7 +345,7 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
 
         <div className="space-y-2">
           <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-            Симуляція НМТ 2026 · Перерва між етапами
+            Симуляція НМТ 2027 · Перерва між етапами
           </div>
           <h2 className="text-2xl font-extrabold text-zinc-950">
             Перший етап (Українська мова + Математика) завершено!
