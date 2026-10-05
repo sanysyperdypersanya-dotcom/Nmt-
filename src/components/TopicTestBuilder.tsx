@@ -18,7 +18,10 @@ import {
   Globe,
   Minus,
   Plus,
+  Database,
 } from 'lucide-react';
+
+type SourceFilter = 'all' | 'znoua' | 'proste' | 'nmt';
 
 interface TopicTestBuilderProps {
   userStats: UserStats;
@@ -44,16 +47,27 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
   const [selectedTopics, setSelectedTopics] = useState<string[]>(
     SUBJECT_METADATA[initialSubjectId].topics
   );
-  const [questionCount, setQuestionCount] = useState<number>(15);
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
+  const [questionCount, setQuestionCount] = useState<number>(16);
   const [shuffleOrder, setShuffleOrder] = useState<boolean>(true);
   const [isTimed, setIsTimed] = useState<boolean>(isTimedDefault);
   const [enterZenMode, setEnterZenMode] = useState<boolean>(false);
+
+  const matchesSource = (q: Question, filter: SourceFilter): boolean => {
+    if (filter === 'all') return true;
+    const src = q.yearOrSource.toLowerCase();
+    if (filter === 'znoua') return src.includes('зно ua');
+    if (filter === 'proste') return src.includes('просте зно');
+    if (filter === 'nmt') return src.includes('нмт');
+    return true;
+  };
 
   // Sync when subject changes
   const handleSelectSubject = (subId: SubjectId) => {
     setSelectedSubject(subId);
     const allTopics = SUBJECT_METADATA[subId].topics;
     setSelectedTopics(allTopics);
+    setSourceFilter('all');
     const totalForSub = Math.min(
       32,
       NMT_QUESTIONS.filter((q) => q.subjectId === subId).length
@@ -66,9 +80,12 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
     setIsTimed(isTimedDefault);
   }, [isTimedDefault]);
 
-  // Pool of available questions from currently checked topics
+  // Pool of available questions from currently checked topics and source filter
   const availablePool = NMT_QUESTIONS.filter(
-    (q) => q.subjectId === selectedSubject && selectedTopics.includes(q.topic)
+    (q) =>
+      q.subjectId === selectedSubject &&
+      selectedTopics.includes(q.topic) &&
+      matchesSource(q, sourceFilter)
   );
 
   const maxQuestions = Math.min(32, availablePool.length);
@@ -88,11 +105,13 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
     setSelectedTopics((prev) => {
       const exists = prev.includes(topic);
       const next = exists ? prev.filter((t) => t !== topic) : [...prev, topic];
-      // Automatically adjust questionCount to fit new pool
       const nextPoolLen = Math.min(
         32,
         NMT_QUESTIONS.filter(
-          (q) => q.subjectId === selectedSubject && next.includes(q.topic)
+          (q) =>
+            q.subjectId === selectedSubject &&
+            next.includes(q.topic) &&
+            matchesSource(q, sourceFilter)
         ).length
       );
       if (nextPoolLen > 0) {
@@ -109,7 +128,9 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
     setSelectedTopics(all);
     const maxLen = Math.min(
       32,
-      NMT_QUESTIONS.filter((q) => q.subjectId === selectedSubject).length
+      NMT_QUESTIONS.filter(
+        (q) => q.subjectId === selectedSubject && matchesSource(q, sourceFilter)
+      ).length
     );
     setQuestionCount(maxLen);
   };
@@ -127,7 +148,10 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
     const byTopic: Record<string, Question[]> = {};
     selectedTopics.forEach((t) => {
       const qs = NMT_QUESTIONS.filter(
-        (q) => q.subjectId === selectedSubject && q.topic === t
+        (q) =>
+          q.subjectId === selectedSubject &&
+          q.topic === t &&
+          matchesSource(q, sourceFilter)
       );
       byTopic[t] = shuffleOrder ? [...qs].sort(() => 0.5 - Math.random()) : [...qs];
     });
@@ -181,13 +205,13 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
             <Wrench className="w-3.5 h-3.5 text-zinc-900" />
-            <span>Персональний конструктор тестів НМТ</span>
+            <span>Персональний конструктор тестів НМТ · ЗНО UA · Просте ЗНО</span>
           </div>
           <h3 className="text-xl font-extrabold text-zinc-950">
-            Зберіть власний тест за обраними темами (від 1 до 32 питань)
+            Зберіть власний тест за обраними темами та базою завдань (від 1 до 32 питань)
           </h3>
           <p className="text-xs text-zinc-600">
-            Оберіть дисципліну, позначте одну або кілька тем і вкажіть точну кількість завдань — конструктор згенерує та об’єднає їх в єдиний тест.
+            Оберіть дисципліну, джерело питань (УЦОЯО, ЗНО UA, Просте ЗНО), позначте потрібні теми та згенеруйте об’єднаний тест.
           </p>
         </div>
 
@@ -215,6 +239,52 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
         </div>
       </div>
 
+      {/* Source Bank Selector: УЦОЯО / ЗНО UA / Просте ЗНО */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl">
+        <div className="flex items-center gap-2 text-xs font-bold text-zinc-800">
+          <Database className="w-4 h-4 text-zinc-900" />
+          <span>База тестових завдань:</span>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { id: 'all' as SourceFilter, label: 'Усі джерела разом' },
+            { id: 'znoua' as SourceFilter, label: 'ЗНО UA (zno.osvita.ua)' },
+            { id: 'proste' as SourceFilter, label: 'Просте ЗНО' },
+            { id: 'nmt' as SourceFilter, label: 'Сесії НМТ УЦОЯО' },
+          ].map((src) => {
+            const count = NMT_QUESTIONS.filter(
+              (q) =>
+                q.subjectId === selectedSubject &&
+                selectedTopics.includes(q.topic) &&
+                matchesSource(q, src.id)
+            ).length;
+            const isSelected = sourceFilter === src.id;
+            return (
+              <button
+                key={src.id}
+                type="button"
+                onClick={() => setSourceFilter(src.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+                  isSelected
+                    ? 'bg-zinc-900 text-white border-zinc-900'
+                    : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100'
+                }`}
+              >
+                <span>{src.label}</span>
+                <span
+                  className={`font-mono text-[10px] px-1.5 py-0.5 rounded ${
+                    isSelected ? 'bg-zinc-800 text-zinc-200' : 'bg-zinc-100 text-zinc-600'
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Step 2: Select Topics for the chosen discipline */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -229,7 +299,7 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
               onClick={handleSelectAllTopics}
               className="font-semibold text-zinc-900 hover:underline"
             >
-              Обрати всі теми (до 32 питань)
+              Обрати всі {currentMeta.topics.length} тем
             </button>
             <span className="text-zinc-300">·</span>
             <button
@@ -246,7 +316,10 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
           {currentMeta.topics.map((topic) => {
             const isChecked = selectedTopics.includes(topic);
             const topicQsCount = NMT_QUESTIONS.filter(
-              (q) => q.subjectId === selectedSubject && q.topic === topic
+              (q) =>
+                q.subjectId === selectedSubject &&
+                q.topic === topic &&
+                matchesSource(q, sourceFilter)
             ).length;
             const mastery = userStats.subjectStats[selectedSubject].topicMastery[topic];
             const pct =
@@ -303,7 +376,7 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
               2. Кількість питань у тесті (залежно від обраних тем):
             </label>
             <span className="font-mono text-sm font-extrabold text-zinc-950 bg-zinc-100 px-3 py-1 rounded-lg">
-              {questionCount} з {maxQuestions} доступних (макс. 32)
+              {questionCount} з {availablePool.length} доступних (ліміт тесту: 32)
             </span>
           </div>
 

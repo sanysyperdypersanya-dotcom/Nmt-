@@ -1,5 +1,6 @@
 import { Question } from '../types/nmt';
 import { EXTRA_NMT_QUESTIONS } from './extraQuestions';
+import { ZNO_PROSTE_QUESTIONS } from './znoProsteQuestions';
 
 export const NMT_QUESTIONS: Question[] = [
   // ==========================================
@@ -1076,4 +1077,5 @@ export const NMT_QUESTIONS: Question[] = [
     explanation: 'The passage highlights that active recall (testing yourself on material) strengthens neural pathways and boosts retention.',
   },
   ...EXTRA_NMT_QUESTIONS,
+  ...ZNO_PROSTE_QUESTIONS,
 ];

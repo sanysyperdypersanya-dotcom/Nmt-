@@ -257,9 +257,9 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
               </label>
               <div className="grid grid-cols-3 gap-1.5">
                 {[
-                  { perSub: 32, total: 128, label: '128 питань', sub: 'Макс (4×32)' },
-                  { perSub: 25, total: 100, label: '100 питань', sub: 'Розширена (4×25)' },
-                  { perSub: 15, total: 60, label: '60 питань', sub: 'Стандарт (4×15)' },
+                  { perSub: 45, total: 180, label: '180 питань', sub: 'Мега-база (4×45)' },
+                  { perSub: 32, total: 128, label: '128 питань', sub: 'Макс НМТ (4×32)' },
+                  { perSub: 25, total: 100, label: '100 питань', sub: 'Стандарт (4×25)' },
                 ].map((opt) => (
                   <button
                     key={opt.perSub}
@@ -626,11 +626,11 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
             <div className="flex items-center gap-2">
               <ListChecks className="w-5 h-5 text-zinc-900" />
               <h3 className="text-lg font-bold text-zinc-950">
-                Тренувальні тести за темами програми НМТ
+                Тренувальні тести за всіма 44 темами (УЦОЯО · ЗНО UA · Просте ЗНО)
               </h3>
             </div>
             <p className="text-xs text-zinc-500 mt-0.5">
-              Оберіть предмет і конкретну тему, щоб прицільно відпрацювати потрібний розділ
+              Оберіть предмет і конкретну тему програми, щоб прицільно відпрацювати завдання з офіційних баз НМТ, ЗНО UA та Просте ЗНО
             </p>
           </div>
 
