@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    font-size: 100%;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #18181b;
+    background-color: #ffffff;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  html[data-font="serif"] body {
+    font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  }
+
+  html[data-font="mono"] body {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  html[data-leading="relaxed"] body,
+  html[data-leading="relaxed"] p,
+  html[data-leading="relaxed"] span,
+  html[data-leading="relaxed"] div {
+    line-height: 1.65;
+  }
+
+  html[data-leading="loose"] body,
+  html[data-leading="loose"] p,
+  html[data-leading="loose"] span,
+  html[data-leading="loose"] div {
+    line-height: 1.85;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* ==========================================
+   DARK THEME OVERRIDES (Темна та Системна теми)
+   ========================================== */
+html.dark body {
+  background-color: #09090b;
+  color: #f4f4f5;
+}
+
+html.dark .bg-white {
+  background-color: #121216 !important;
+}
+
+html.dark .bg-zinc-50,
+html.dark .bg-zinc-50\/80,
+html.dark .bg-zinc-50\/70 {
+  background-color: #18181d !important;
+}
+
+html.dark .bg-zinc-100 {
+  background-color: #232329 !important;
+}
+
+html.dark .bg-zinc-200 {
+  background-color: #2e2e36 !important;
+}
+
+html.dark .text-zinc-950 {
+  color: #fafafa !important;
+}
+
+html.dark .text-zinc-900 {
+  color: #f4f4f5 !important;
+}
+
+html.dark .text-zinc-800 {
+  color: #e4e4e7 !important;
+}
+
+html.dark .text-zinc-700 {
+  color: #d4d4d8 !important;
+}
+
+html.dark .text-zinc-600,
+html.dark .text-zinc-500 {
+  color: #a1a1aa !important;
+}
+
+html.dark .border-zinc-100 {
+  border-color: #1f1f26 !important;
+}
+
+html.dark .border-zinc-200 {
+  border-color: #272730 !important;
+}
+
+html.dark .border-zinc-300 {
+  border-color: #3f3f4a !important;
+}
+
+html.dark .divide-zinc-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1f1f26 !important;
+}
+
+/* High contrast buttons in dark mode */
+html.dark button.bg-zinc-900,
+html.dark button.bg-zinc-950 {
+  background-color: #f4f4f5 !important;
+  color: #09090b !important;
+  border-color: #f4f4f5 !important;
+}
+
+html.dark button.bg-zinc-900:hover,
+html.dark button.bg-zinc-950:hover {
+  background-color: #e4e4e7 !important;
+}
+
+html.dark button.bg-zinc-900 svg.fill-white,
+html.dark button.bg-zinc-950 svg.fill-white {
+  fill: #09090b !important;
+  color: #09090b !important;
+}
+
+/* Semantic accent boxes in dark mode */
+html.dark .bg-rose-50 {
+  background-color: rgba(225, 29, 72, 0.14) !important;
+}
+html.dark .border-rose-200 {
+  border-color: rgba(225, 29, 72, 0.35) !important;
+}
+html.dark .text-rose-950,
+html.dark .text-rose-900,
+html.dark .text-rose-800,
+html.dark .text-rose-700 {
+  color: #fda4af !important;
+}
+
+html.dark .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.14) !important;
+}
+html.dark .border-emerald-200 {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+html.dark .text-emerald-800,
+html.dark .text-emerald-700 {
+  color: #6ee7b7 !important;
+}
+
+html.dark .bg-amber-50,
+html.dark .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+}
+html.dark .border-amber-200,
+html.dark .border-amber-300 {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+html.dark .text-amber-900,
+html.dark .text-amber-800,
+html.dark .text-amber-700 {
+  color: #fcd34d !important;
+}
+
+html.dark .bg-orange-50,
+html.dark .bg-orange-50\/70 {
+  background-color: rgba(249, 115, 22, 0.14) !important;
+}
+html.dark .border-orange-200 {
+  border-color: rgba(249, 115, 22, 0.35) !important;
+}
+html.dark .text-orange-950,
+html.dark .text-orange-900 {
+  color: #fdba74 !important;
+}

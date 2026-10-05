@@ -1,0 +1,6 @@
+{
+  "name": "НМТ 2026 Тренажер",
+  "description": "Платформа підготовки до НМТ з інтерактивними тестами, таймером та персональною статистикою",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
