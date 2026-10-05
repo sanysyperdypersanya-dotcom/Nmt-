@@ -126,9 +126,13 @@ export interface SiteRegistration {
   registeredAt: string;
   fullName: string;
   email: string;
+  phone?: string;
   schoolOrCity: string;
   targetScore: number;
+  pinCode?: string;
   questionsAnswered: number;
+  stats: UserStats;
 }
+
 
 

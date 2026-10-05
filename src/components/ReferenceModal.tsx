@@ -15,6 +15,8 @@ import {
   AlignJustify,
   CheckCircle2,
   Bookmark,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 
 interface ReferenceModalProps {
@@ -30,6 +32,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({
   const [activeSectionTitle, setActiveSectionTitle] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewLayout, setViewLayout] = useState<'textbook' | 'grid'>('textbook');
+  const [isTopMenuCollapsed, setIsTopMenuCollapsed] = useState<boolean>(false);
 
   const currentCategory = REFERENCE_MATERIALS.find((r) => r.subjectId === activeSubject);
   const currentSubjectMeta = SUBJECT_METADATA[activeSubject];
@@ -68,221 +71,319 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-white text-zinc-900 flex flex-col overflow-hidden">
-      {/* FULL-SCREEN TOP NAVIGATION BAR */}
-      <header className="border-b border-zinc-200 bg-white px-4 sm:px-6 py-3.5 shrink-0">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          {/* Left: Back button + Title */}
-          <div className="flex items-center justify-between lg:justify-start gap-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Назад до тренажера</span>
-            </button>
+      {/* FULL-SCREEN TOP NAVIGATION BAR (COLLAPSIBLE VIA ARROW) */}
+      <header className="border-b border-zinc-200 bg-white shrink-0 transition-all">
+        {isTopMenuCollapsed ? (
+          /* COMPACT COLLAPSED TOP BAR */
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition-colors cursor-pointer shrink-0"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Назад</span>
+              </button>
 
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-zinc-100 text-zinc-900 hidden sm:flex">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-base sm:text-lg font-extrabold text-zinc-950">
-                    Теорія та Довідкові матеріали НМТ 2027
-                  </h1>
-                  <span className="hidden md:inline-block text-[11px] font-mono bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-md">
-                    Повноекранний конспект
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-500 hidden sm:block">
-                  {currentCategory?.title} · {totalItemsInSubject} правил, формул і прикладів
-                </p>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900 truncate">
+                {subjectIcons[activeSubject]}
+                <span className="truncate">{currentSubjectMeta.name}</span>
+                <span className="font-mono text-[10px] bg-zinc-100 text-zinc-700 px-1.5 py-0.5 rounded">
+                  {totalItemsInSubject}
+                </span>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="lg:hidden p-2 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
-              title="Закрити"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Right: Subject Tabs + Search + View Switcher */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Subject Switcher */}
-            <div className="flex flex-wrap gap-1.5">
-              {subjects.map((subId) => {
-                const meta = SUBJECT_METADATA[subId];
-                const isSelected = activeSubject === subId;
-                const cat = REFERENCE_MATERIALS.find((r) => r.subjectId === subId);
-                const count = cat?.sections.reduce((sum, s) => sum + s.items.length, 0) || 0;
-                return (
-                  <button
-                    key={subId}
-                    type="button"
-                    onClick={() => {
-                      setActiveSubject(subId);
-                      setActiveSectionTitle('ALL');
-                      setSearchQuery('');
-                    }}
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer ${
-                      isSelected
-                        ? 'bg-zinc-950 text-white border-zinc-950 shadow-xs'
-                        : 'bg-zinc-50 text-zinc-800 border-zinc-200 hover:bg-zinc-100'
-                    }`}
-                  >
-                    {subjectIcons[subId]}
-                    <span>{meta.name}</span>
-                    <span
-                      className={`font-mono text-[10px] px-1.5 py-0.5 rounded ${
-                        isSelected ? 'bg-zinc-800 text-zinc-200' : 'bg-zinc-200 text-zinc-700'
-                      }`}
-                    >
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Search Input */}
-            <div className="relative flex-1 sm:flex-initial">
-              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Пошук у теорії..."
-                className="pl-8 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 w-full sm:w-52"
-              />
-            </div>
-
-            {/* Reading mode switcher: Конспект vs Сітка */}
-            <div className="hidden sm:inline-flex p-1 bg-zinc-100 border border-zinc-200 rounded-xl">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
-                onClick={() => setViewLayout('textbook')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                  viewLayout === 'textbook'
-                    ? 'bg-white text-zinc-950 shadow-xs'
-                    : 'text-zinc-600 hover:text-zinc-950'
-                }`}
-                title="Режим підручника (конспект теорії)"
+                onClick={() => setIsTopMenuCollapsed(false)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-xs font-semibold text-zinc-900 transition-colors cursor-pointer"
+                title="Розгорнути верхнє меню"
               >
-                <AlignJustify className="w-3.5 h-3.5" />
-                <span>Конспект</span>
+                <span>Меню</span>
+                <ChevronDown className="w-4 h-4" />
               </button>
+
               <button
                 type="button"
-                onClick={() => setViewLayout('grid')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                  viewLayout === 'grid'
-                    ? 'bg-white text-zinc-950 shadow-xs'
-                    : 'text-zinc-600 hover:text-zinc-950'
-                }`}
-                title="Компактні картки формул"
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 cursor-pointer"
+                title="Закрити"
               >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Картки</span>
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
-        </div>
-      </header>
+        ) : (
+          /* EXPANDED TOP MENU */
+          <div className="px-4 sm:px-6 pt-3.5 pb-2">
+            <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              {/* Left: Back button + Title */}
+              <div className="flex items-center justify-between lg:justify-start gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer shrink-0"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Назад до тренажера</span>
+                </button>
 
-      {/* FULL-SCREEN BODY: SIDEBAR TABLE OF CONTENTS + MAIN THEORY CANVAS */}
-      <div className="flex-1 overflow-hidden bg-zinc-50/50">
-        <div className="max-w-7xl mx-auto h-full flex flex-col lg:flex-row">
-          {/* LEFT SIDEBAR: Table of Contents (Зміст розділів дисципліни) */}
-          <aside className="lg:w-80 shrink-0 border-b lg:border-b-0 lg:border-r border-zinc-200 bg-white lg:overflow-y-auto p-4 sm:p-5">
-            <div className="space-y-4">
-              <div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5">
-                  <Bookmark className="w-3.5 h-3.5 text-zinc-800" />
-                  <span>Зміст теорії: {currentSubjectMeta.name}</span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="p-2 rounded-xl bg-zinc-100 text-zinc-900 hidden sm:flex">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-sm sm:text-lg font-extrabold text-zinc-950 leading-tight">
+                        Теорія та Довідкові матеріали НМТ 2027
+                      </h1>
+                      <span className="hidden md:inline-block text-[11px] font-mono bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded-md">
+                        Повноекранний конспект
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-500 hidden sm:block">
+                      {currentCategory?.title} · {totalItemsInSubject} правил, формул і прикладів
+                    </p>
+                  </div>
                 </div>
 
-                {/* Mobile horizontal scroll / Desktop vertical list */}
-                <div className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
+                <div className="flex items-center gap-1 lg:hidden shrink-0">
                   <button
                     type="button"
-                    onClick={() => setActiveSectionTitle('ALL')}
-                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shrink-0 border cursor-pointer ${
-                      activeSectionTitle === 'ALL'
-                        ? 'bg-zinc-950 text-white border-zinc-950 shadow-xs'
-                        : 'bg-zinc-50 text-zinc-800 border-zinc-200 hover:bg-zinc-100'
-                    }`}
+                    onClick={() => setIsTopMenuCollapsed(true)}
+                    className="p-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 hover:text-zinc-950 transition-colors cursor-pointer"
+                    title="Сховати верхнє меню"
                   >
-                    <span>Усі розділи програми</span>
-                    <span
-                      className={`font-mono text-[10px] px-1.5 py-0.5 rounded ${
-                        activeSectionTitle === 'ALL'
-                          ? 'bg-zinc-800 text-zinc-200'
-                          : 'bg-zinc-200 text-zinc-700'
-                      }`}
-                    >
-                      {totalItemsInSubject}
-                    </span>
+                    <ChevronUp className="w-5 h-5" />
                   </button>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="p-2 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 cursor-pointer"
+                    title="Закрити"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
 
-                  {currentCategory?.sections.map((sec, idx) => {
-                    const isSelected = activeSectionTitle === sec.title;
+              {/* Right: Subject Tabs + Search + View Switcher + Collapse Arrow */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                {/* Subject Switcher */}
+                <div className="flex flex-wrap gap-1.5">
+                  {subjects.map((subId) => {
+                    const meta = SUBJECT_METADATA[subId];
+                    const isSelected = activeSubject === subId;
+                    const cat = REFERENCE_MATERIALS.find((r) => r.subjectId === subId);
+                    const count = cat?.sections.reduce((sum, s) => sum + s.items.length, 0) || 0;
                     return (
                       <button
-                        key={sec.title}
+                        key={subId}
                         type="button"
-                        onClick={() => setActiveSectionTitle(sec.title)}
-                        className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs transition-all flex items-start justify-between gap-2 shrink-0 border cursor-pointer ${
+                        onClick={() => {
+                          setActiveSubject(subId);
+                          setActiveSectionTitle('ALL');
+                          setSearchQuery('');
+                        }}
+                        className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer ${
                           isSelected
-                            ? 'bg-zinc-900 text-white border-zinc-900 font-semibold shadow-xs'
-                            : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
+                            ? 'bg-zinc-950 text-white border-zinc-950 shadow-xs'
+                            : 'bg-zinc-50 text-zinc-800 border-zinc-200 hover:bg-zinc-100'
                         }`}
                       >
-                        <div className="min-w-0 pr-1">
-                          <div
-                            className={`text-[10px] font-mono uppercase ${
-                              isSelected ? 'text-zinc-300' : 'text-zinc-400'
-                            }`}
-                          >
-                            Розділ {String(idx + 1).padStart(2, '0')}
-                          </div>
-                          <div className="leading-snug mt-0.5 line-clamp-2">{sec.title}</div>
-                        </div>
+                        {subjectIcons[subId]}
+                        <span>{meta.name}</span>
                         <span
-                          className={`font-mono text-[10px] px-1.5 py-0.5 rounded shrink-0 mt-1 ${
-                            isSelected
-                              ? 'bg-zinc-800 text-zinc-200'
-                              : 'bg-zinc-100 text-zinc-600'
+                          className={`font-mono text-[10px] px-1.5 py-0.5 rounded ${
+                            isSelected ? 'bg-zinc-800 text-zinc-200' : 'bg-zinc-200 text-zinc-700'
                           }`}
                         >
-                          {sec.items.length}
+                          {count}
                         </span>
                       </button>
                     );
                   })}
                 </div>
-              </div>
 
-              {/* Exam Structure Info Card on Desktop */}
-              <div className="hidden lg:block p-4 rounded-xl bg-zinc-50 border border-zinc-200 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Довідка блоку НМТ</span>
+                {/* Search Input */}
+                <div className="relative flex-1 sm:flex-initial">
+                  <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Пошук у теорії..."
+                    className="pl-8 pr-3 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-xs text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 w-full sm:w-52"
+                  />
                 </div>
-                <p className="text-[11px] text-zinc-600 leading-relaxed">
-                  Дисципліна <strong>«{currentSubjectMeta.name}»</strong> містить{' '}
-                  <strong>{currentSubjectMeta.topics.length}</strong> обов’язкових тематичних
-                  розділів програми УЦОЯО. Максимальний тестовий бал —{' '}
-                  <strong>{currentSubjectMeta.maxOfficialPoints} б.</strong> (переводиться у шкалу
-                  100–200).
-                </p>
+
+                {/* Reading mode switcher: Конспект vs Сітка */}
+                <div className="hidden sm:inline-flex p-1 bg-zinc-100 border border-zinc-200 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setViewLayout('textbook')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                      viewLayout === 'textbook'
+                        ? 'bg-white text-zinc-950 shadow-xs'
+                        : 'text-zinc-600 hover:text-zinc-950'
+                    }`}
+                    title="Режим підручника (конспект теорії)"
+                  >
+                    <AlignJustify className="w-3.5 h-3.5" />
+                    <span>Конспект</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewLayout('grid')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                      viewLayout === 'grid'
+                        ? 'bg-white text-zinc-950 shadow-xs'
+                        : 'text-zinc-600 hover:text-zinc-950'
+                    }`}
+                    title="Компактні картки формул"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <span>Картки</span>
+                  </button>
+                </div>
+
+                {/* Desktop Collapse Top Menu Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsTopMenuCollapsed(true)}
+                  className="hidden lg:inline-flex items-center gap-1 px-2.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-xs font-semibold text-zinc-800 transition-colors cursor-pointer"
+                  title="Сховати верхнє меню"
+                >
+                  <ChevronUp className="w-4 h-4" />
+                  <span>Сховати</span>
+                </button>
               </div>
             </div>
-          </aside>
+
+            {/* Bottom Arrow Strip to easily collapse the top menu on mobile & desktop */}
+            <div className="max-w-7xl mx-auto pt-2 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setIsTopMenuCollapsed(true)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-1 rounded-lg bg-zinc-100/80 hover:bg-zinc-200/80 text-[11px] font-semibold text-zinc-600 hover:text-zinc-950 transition-colors cursor-pointer"
+                title="Сховати верхнє меню"
+              >
+                <ChevronUp className="w-3.5 h-3.5" />
+                <span>Сховати верхнє меню</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* FULL-SCREEN BODY: SIDEBAR TABLE OF CONTENTS + MAIN THEORY CANVAS */}
+      <div className="flex-1 overflow-hidden bg-zinc-50/50">
+        <div className="max-w-7xl mx-auto h-full flex flex-col lg:flex-row">
+          {/* LEFT SIDEBAR: Table of Contents (Зміст розділів дисципліни) - hidden on mobile when top menu is collapsed */}
+          {!isTopMenuCollapsed && (
+            <aside className="lg:w-80 shrink-0 border-b lg:border-b-0 lg:border-r border-zinc-200 bg-white lg:overflow-y-auto px-4 py-2.5 sm:p-5">
+              <div className="space-y-3 lg:space-y-4">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-2 flex items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Bookmark className="w-3.5 h-3.5 text-zinc-800" />
+                      <span>Зміст теорії: {currentSubjectMeta.name}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsTopMenuCollapsed(true)}
+                      className="lg:hidden inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-500 hover:text-zinc-900"
+                    >
+                      <span>Згорнути</span>
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Mobile compact horizontal scroll / Desktop vertical list */}
+                  <div className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
+                    <button
+                      type="button"
+                      onClick={() => setActiveSectionTitle('ALL')}
+                      className={`w-auto lg:w-full text-left px-3 py-2 lg:px-3.5 lg:py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 shrink-0 border cursor-pointer ${
+                        activeSectionTitle === 'ALL'
+                          ? 'bg-zinc-950 text-white border-zinc-950 shadow-xs'
+                          : 'bg-zinc-50 text-zinc-800 border-zinc-200 hover:bg-zinc-100'
+                      }`}
+                    >
+                      <span className="whitespace-nowrap lg:whitespace-normal">
+                        Усі розділи програми
+                      </span>
+                      <span
+                        className={`font-mono text-[10px] px-1.5 py-0.5 rounded ${
+                          activeSectionTitle === 'ALL'
+                            ? 'bg-zinc-800 text-zinc-200'
+                            : 'bg-zinc-200 text-zinc-700'
+                        }`}
+                      >
+                        {totalItemsInSubject}
+                      </span>
+                    </button>
+
+                    {currentCategory?.sections.map((sec, idx) => {
+                      const isSelected = activeSectionTitle === sec.title;
+                      return (
+                        <button
+                          key={sec.title}
+                          type="button"
+                          onClick={() => setActiveSectionTitle(sec.title)}
+                          className={`w-auto max-w-[240px] lg:max-w-none lg:w-full text-left px-3 py-2 lg:px-3.5 lg:py-2.5 rounded-xl text-xs transition-all flex items-center lg:items-start justify-between gap-2 shrink-0 border cursor-pointer ${
+                            isSelected
+                              ? 'bg-zinc-900 text-white border-zinc-900 font-semibold shadow-xs'
+                              : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
+                          }`}
+                        >
+                          <div className="min-w-0 pr-1">
+                            <div
+                              className={`text-[10px] font-mono uppercase hidden lg:block ${
+                                isSelected ? 'text-zinc-300' : 'text-zinc-400'
+                              }`}
+                            >
+                              Розділ {String(idx + 1).padStart(2, '0')}
+                            </div>
+                            <div className="leading-snug truncate lg:whitespace-normal lg:line-clamp-2">
+                              {sec.title}
+                            </div>
+                          </div>
+                          <span
+                            className={`font-mono text-[10px] px-1.5 py-0.5 rounded shrink-0 ${
+                              isSelected
+                                ? 'bg-zinc-800 text-zinc-200'
+                                : 'bg-zinc-100 text-zinc-600'
+                            }`}
+                          >
+                            {sec.items.length}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Exam Structure Info Card on Desktop */}
+                <div className="hidden lg:block p-4 rounded-xl bg-zinc-50 border border-zinc-200 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Довідка блоку НМТ</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-600 leading-relaxed">
+                    Дисципліна <strong>«{currentSubjectMeta.name}»</strong> містить{' '}
+                    <strong>{currentSubjectMeta.topics.length}</strong> обов’язкових тематичних
+                    розділів програми УЦОЯО. Максимальний тестовий бал —{' '}
+                    <strong>{currentSubjectMeta.maxOfficialPoints} б.</strong> (переводиться у шкалу
+                    100–200).
+                  </p>
+                </div>
+              </div>
+            </aside>
+          )}
 
           {/* MAIN FULL-SCREEN THEORY READING AREA */}
           <main className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8">

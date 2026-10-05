@@ -12,9 +12,12 @@ import {
   Monitor,
   Sliders,
   UserPlus,
+  ArrowRightLeft,
+  Check,
+  Lock,
 } from 'lucide-react';
 import { formatTime } from '../utils/scoring';
-import { UISettings, ThemeMode } from '../types/nmt';
+import { UISettings, ThemeMode, SiteRegistration } from '../types/nmt';
 
 interface HeaderTimerProps {
   streakDays: number;
@@ -24,6 +27,9 @@ interface HeaderTimerProps {
   onUpdateUISettings: (settings: UISettings) => void;
   onOpenSettingsModal: () => void;
   onOpenRegistrationTab?: () => void;
+  registrations?: SiteRegistration[];
+  activeAccountId?: string;
+  onQuickSwitchAccount?: (account: SiteRegistration) => void;
 }
 
 export const HeaderTimer: React.FC<HeaderTimerProps> = ({
@@ -34,6 +40,9 @@ export const HeaderTimer: React.FC<HeaderTimerProps> = ({
   onUpdateUISettings,
   onOpenSettingsModal,
   onOpenRegistrationTab,
+  registrations = [],
+  activeAccountId,
+  onQuickSwitchAccount,
 }) => {
   // 1. Live Countdown to official NMT 2027 session (Starts approx. May 18, 2027 10:00:00 EEST)
   const targetDate = new Date('2027-05-18T10:00:00+03:00').getTime();
@@ -52,6 +61,8 @@ export const HeaderTimer: React.FC<HeaderTimerProps> = ({
   const [timerRemaining, setTimerRemaining] = useState<number>(60 * 60);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
   const [isStudyTimerOpen, setIsStudyTimerOpen] = useState<boolean>(false);
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState<boolean>(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -231,158 +242,291 @@ export const HeaderTimer: React.FC<HeaderTimerProps> = ({
       )}
 
       {/* Main Bar: Brand, Quick Theme & Font Size Controls, Streak & User Status */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col lg:flex-row items-center justify-between gap-4">
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          title="Оновити сторінку"
-          className="flex items-center gap-3 text-left cursor-pointer group focus:outline-none"
-        >
-          <div className="w-10 h-10 rounded-xl bg-zinc-900 group-hover:bg-zinc-800 text-white flex items-center justify-center font-extrabold text-xl shadow-sm tracking-wider transition-colors">
-            НМТ
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight text-zinc-950 group-hover:text-zinc-700 transition-colors">
-                Тренажер НМТ 2027
-              </h1>
-              <span className="text-xs text-zinc-500">·</span>
-              <span className="text-xs font-medium text-emerald-700">
-                Офіційний формат УЦОЯО
-              </span>
-            </div>
-            <p className="text-xs text-zinc-500">
-              4 обов'язкові блоки · Симуляції НМТ · Тести за темами · Персональна статистика
-            </p>
-          </div>
-        </button>
-
-        {/* Right: Interface Quick Controls (Theme, Font Size, Settings) + User Status */}
-        <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
-          {/* Quick Theme Switcher: Світла / Темна / Системна */}
-          <div
-            className="inline-flex items-center p-1 bg-zinc-100 border border-zinc-200 rounded-lg"
-            title="Вибір теми: Світла, Темна, Системна"
-          >
-            <button
-              type="button"
-              onClick={() => handleQuickTheme('light')}
-              className={`p-1.5 rounded text-xs flex items-center gap-1 transition-colors ${
-                uiSettings.theme === 'light'
-                  ? 'bg-white text-zinc-950 shadow-xs font-semibold'
-                  : 'text-zinc-600 hover:text-zinc-950'
-              }`}
-              title="Світла тема"
-            >
-              <Sun className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Світла</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickTheme('dark')}
-              className={`p-1.5 rounded text-xs flex items-center gap-1 transition-colors ${
-                uiSettings.theme === 'dark'
-                  ? 'bg-white text-zinc-950 shadow-xs font-semibold'
-                  : 'text-zinc-600 hover:text-zinc-950'
-              }`}
-              title="Темна тема"
-            >
-              <Moon className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Темна</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickTheme('system')}
-              className={`p-1.5 rounded text-xs flex items-center gap-1 transition-colors ${
-                uiSettings.theme === 'system'
-                  ? 'bg-white text-zinc-950 shadow-xs font-semibold'
-                  : 'text-zinc-600 hover:text-zinc-950'
-              }`}
-              title="Системна тема"
-            >
-              <Monitor className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Системна</span>
-            </button>
-          </div>
-
-          {/* Quick Font Scaling: A- / % / A+ */}
-          <div
-            className="inline-flex items-center bg-zinc-100 border border-zinc-200 rounded-lg p-1 gap-1"
-            title="Збільшення та зменшення шрифту"
-          >
-            <button
-              type="button"
-              onClick={() => handleQuickFontScale(-5)}
-              disabled={uiSettings.fontSizeScale <= 85}
-              className="px-2 py-1 rounded text-xs font-bold text-zinc-700 hover:bg-white hover:text-zinc-950 disabled:opacity-40 transition-colors"
-              title="Зменшити шрифт"
-            >
-              A-
-            </button>
-            <span className="text-[11px] font-mono font-semibold text-zinc-700 px-1">
-              {uiSettings.fontSizeScale}%
-            </span>
-            <button
-              type="button"
-              onClick={() => handleQuickFontScale(5)}
-              disabled={uiSettings.fontSizeScale >= 145}
-              className="px-2 py-1 rounded text-xs font-bold text-zinc-700 hover:bg-white hover:text-zinc-950 disabled:opacity-40 transition-colors"
-              title="Збільшити шрифт"
-            >
-              A+
-            </button>
-          </div>
-
-          {/* Detailed Interface Settings Button */}
+      {isHeaderCollapsed ? (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={onOpenSettingsModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 text-xs font-semibold text-zinc-800 transition-colors"
-            title="Детальні налаштування інтерфейсу"
+            onClick={() => window.location.reload()}
+            className="flex items-center gap-2 text-left cursor-pointer"
           >
-            <Sliders className="w-3.5 h-3.5" />
-            <span>Інтерфейс</span>
+            <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-extrabold text-xs">
+              НМТ
+            </div>
+            <span className="text-sm font-bold text-zinc-950">Тренажер НМТ 2027</span>
           </button>
 
-          {/* Streak */}
-          <div className="flex items-center gap-1.5 bg-orange-50/70 border border-orange-200 px-3 py-1.5 rounded-lg text-orange-950">
-            <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
-            <span className="font-semibold text-xs">
-              {streakDays} {streakDays === 1 ? 'день' : streakDays < 5 ? 'дні' : 'днів'}
-            </span>
+          <button
+            type="button"
+            onClick={() => setIsHeaderCollapsed(false)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-xs font-semibold text-zinc-800 transition-colors cursor-pointer"
+            title="Показати верхнє меню"
+          >
+            <span>Показати верхнє меню</span>
+            <ChevronDown className="w-4 h-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="w-full lg:w-auto flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              title="Оновити сторінку"
+              className="flex items-center gap-3 text-left cursor-pointer group focus:outline-none"
+            >
+              <div className="w-10 h-10 rounded-xl bg-zinc-900 group-hover:bg-zinc-800 text-white flex items-center justify-center font-extrabold text-xl shadow-sm tracking-wider transition-colors">
+                НМТ
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-bold tracking-tight text-zinc-950 group-hover:text-zinc-700 transition-colors">
+                    Тренажер НМТ 2027
+                  </h1>
+                  <span className="text-xs text-zinc-500 hidden sm:inline">·</span>
+                  <span className="text-xs font-medium text-emerald-700 hidden sm:inline">
+                    Офіційний формат УЦОЯО
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500">
+                  4 обов'язкові блоки · Симуляції НМТ · Тести за темами · Персональна статистика
+                </p>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsHeaderCollapsed(true)}
+              className="lg:hidden p-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer shrink-0"
+              title="Сховати верхнє меню"
+            >
+              <ChevronUp className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* User Avatar & Participant Registration Trigger */}
-          <div className="flex items-center gap-2 pl-3 border-l border-zinc-200">
+          {/* Right: Interface Quick Controls (Theme, Font Size, Settings) + User Status */}
+          <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+            {/* Quick Theme Switcher: Світла / Темна / Системна */}
+            <div
+              className="inline-flex items-center p-1 bg-zinc-100 border border-zinc-200 rounded-lg"
+              title="Вибір теми: Світла, Темна, Системна"
+            >
+              <button
+                type="button"
+                onClick={() => handleQuickTheme('light')}
+                className={`p-1.5 rounded text-xs flex items-center gap-1 transition-colors ${
+                  uiSettings.theme === 'light'
+                    ? 'bg-white text-zinc-950 shadow-xs font-semibold'
+                    : 'text-zinc-600 hover:text-zinc-950'
+                }`}
+                title="Світла тема"
+              >
+                <Sun className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Світла</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickTheme('dark')}
+                className={`p-1.5 rounded text-xs flex items-center gap-1 transition-colors ${
+                  uiSettings.theme === 'dark'
+                    ? 'bg-white text-zinc-950 shadow-xs font-semibold'
+                    : 'text-zinc-600 hover:text-zinc-950'
+                }`}
+                title="Темна тема"
+              >
+                <Moon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Темна</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickTheme('system')}
+                className={`p-1.5 rounded text-xs flex items-center gap-1 transition-colors ${
+                  uiSettings.theme === 'system'
+                    ? 'bg-white text-zinc-950 shadow-xs font-semibold'
+                    : 'text-zinc-600 hover:text-zinc-950'
+                }`}
+                title="Системна тема"
+              >
+                <Monitor className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Системна</span>
+              </button>
+            </div>
+
+            {/* Quick Font Scaling: A- / % / A+ */}
+            <div
+              className="inline-flex items-center bg-zinc-100 border border-zinc-200 rounded-lg p-1 gap-1"
+              title="Збільшення та зменшення шрифту"
+            >
+              <button
+                type="button"
+                onClick={() => handleQuickFontScale(-5)}
+                disabled={uiSettings.fontSizeScale <= 85}
+                className="px-2 py-1 rounded text-xs font-bold text-zinc-700 hover:bg-white hover:text-zinc-950 disabled:opacity-40 transition-colors"
+                title="Зменшити шрифт"
+              >
+                A-
+              </button>
+              <span className="text-[11px] font-mono font-semibold text-zinc-700 px-1">
+                {uiSettings.fontSizeScale}%
+              </span>
+              <button
+                type="button"
+                onClick={() => handleQuickFontScale(5)}
+                disabled={uiSettings.fontSizeScale >= 145}
+                className="px-2 py-1 rounded text-xs font-bold text-zinc-700 hover:bg-white hover:text-zinc-950 disabled:opacity-40 transition-colors"
+                title="Збільшити шрифт"
+              >
+                A+
+              </button>
+            </div>
+
+            {/* Detailed Interface Settings Button */}
             <button
               type="button"
-              onClick={onOpenRegistrationTab}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 text-zinc-800 text-xs font-semibold transition-colors cursor-pointer"
-              title="Реєстрація учасника НМТ 2027"
+              onClick={onOpenSettingsModal}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 text-xs font-semibold text-zinc-800 transition-colors"
+              title="Детальні налаштування інтерфейсу"
             >
-              <UserPlus className="w-3.5 h-3.5 text-zinc-700" />
-              <span className="hidden md:inline">Реєстрація</span>
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Інтерфейс</span>
             </button>
 
-            <button
-              type="button"
-              onClick={onOpenRegistrationTab}
-              className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity cursor-pointer"
-              title="Профіль учасника НМТ 2027"
-            >
-              <div className="w-8 h-8 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-700 flex items-center justify-center font-bold text-xs">
-                {userName.slice(0, 1).toUpperCase()}
-              </div>
-              <div className="text-left hidden sm:block">
-                <div className="text-xs font-semibold text-zinc-900">{userName}</div>
-                <div className="text-[11px] text-zinc-500">{totalAnswered} розв’язано</div>
-              </div>
-            </button>
+            {/* Streak */}
+            <div className="flex items-center gap-1.5 bg-orange-50/70 border border-orange-200 px-3 py-1.5 rounded-lg text-orange-950">
+              <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
+              <span className="font-semibold text-xs">
+                {streakDays} {streakDays === 1 ? 'день' : streakDays < 5 ? 'дні' : 'днів'}
+              </span>
+            </div>
+
+            {/* User Avatar & Multi-Account Switcher Dropdown */}
+            <div className="relative flex items-center gap-2 pl-3 border-l border-zinc-200">
+              <button
+                type="button"
+                onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 transition-colors cursor-pointer"
+                title="Переключити акаунт на пристрої"
+              >
+                <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  {userName.slice(0, 1).toUpperCase()}
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-zinc-900 max-w-[130px] truncate">
+                      {userName}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-zinc-500 flex items-center gap-1">
+                    <span>{totalAnswered} завд.</span>
+                    <span>·</span>
+                    <span className="text-emerald-700 font-medium">
+                      {registrations.length} акаунт{registrations.length === 1 ? '' : 'и'}
+                    </span>
+                  </div>
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+              </button>
+
+              {isAccountMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-zinc-200 rounded-2xl shadow-xl z-50 p-3 space-y-2.5">
+                  <div className="flex items-center justify-between px-1 pb-1.5 border-b border-zinc-100">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+                      <ArrowRightLeft className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Акаунти на пристрої ({registrations.length})</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsAccountMenuOpen(false)}
+                      className="text-xs text-zinc-400 hover:text-zinc-700"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="max-h-56 overflow-y-auto space-y-1">
+                    {registrations.map((acc) => {
+                      const isCurr = acc.id === activeAccountId;
+                      return (
+                        <button
+                          key={acc.id}
+                          type="button"
+                          onClick={() => {
+                            setIsAccountMenuOpen(false);
+                            if (acc.pinCode && acc.pinCode.trim().length > 0 && !isCurr) {
+                              if (onOpenRegistrationTab) onOpenRegistrationTab();
+                            } else if (onQuickSwitchAccount) {
+                              onQuickSwitchAccount(acc);
+                            }
+                          }}
+                          className={`w-full text-left px-2.5 py-2 rounded-xl flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+                            isCurr
+                              ? 'bg-zinc-900 text-white'
+                              : 'hover:bg-zinc-100 text-zinc-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                              className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                                isCurr
+                                  ? 'bg-zinc-800 text-emerald-400'
+                                  : 'bg-zinc-200 text-zinc-800'
+                              }`}
+                            >
+                              {acc.fullName.slice(0, 1).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-xs font-bold truncate flex items-center gap-1">
+                                <span>{acc.fullName}</span>
+                                {acc.pinCode && <Lock className="w-3 h-3 text-amber-500" />}
+                              </div>
+                              <div
+                                className={`text-[10px] truncate ${
+                                  isCurr ? 'text-zinc-300' : 'text-zinc-500'
+                                }`}
+                              >
+                                {acc.stats.totalCompletedTests} тестів ·{' '}
+                                {acc.stats.totalQuestionsAnswered} пит.
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {isCurr && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="pt-1.5 border-t border-zinc-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAccountMenuOpen(false);
+                        if (onOpenRegistrationTab) onOpenRegistrationTab();
+                      }}
+                      className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Керування акаунтами / Додати</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setIsHeaderCollapsed(true)}
+                className="hidden lg:inline-flex p-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer"
+                title="Сховати верхнє меню"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 };

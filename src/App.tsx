@@ -21,6 +21,8 @@ import {
   saveUISettings,
   loadSiteRegistrations,
   saveSiteRegistrations,
+  loadActiveAccountId,
+  saveActiveAccountId,
 } from './utils/storage';
 import { SoundscapeId, ambientAudio } from './utils/ambientAudio';
 
@@ -44,13 +46,29 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  const [userStats, setUserStats] = useState<UserStats>(loadUserStats);
+  const [registrations, setRegistrations] = useState<SiteRegistration[]>(() =>
+    loadSiteRegistrations(loadUserStats())
+  );
+  const [activeAccountId, setActiveAccountId] = useState<string>(() => {
+    const savedId = loadActiveAccountId();
+    const initialRegs = loadSiteRegistrations(loadUserStats());
+    if (savedId && initialRegs.some((r) => r.id === savedId)) {
+      return savedId;
+    }
+    return initialRegs[0]?.id || '';
+  });
+
+  const [userStats, setUserStats] = useState<UserStats>(() => {
+    const savedId = loadActiveAccountId();
+    const initialRegs = loadSiteRegistrations(loadUserStats());
+    const found =
+      initialRegs.find((r) => r.id === savedId) || initialRegs[0];
+    return found ? found.stats : loadUserStats();
+  });
+
   const [uiSettings, setUiSettings] = useState<UISettings>(loadUISettings);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'subjects' | 'stats' | 'registration'>('subjects');
-
-  // Participant Registrations state
-  const [registrations, setRegistrations] = useState<SiteRegistration[]>(loadSiteRegistrations);
 
   // Background Sounds & Zen Mode state
   const [activeSound, setActiveSound] = useState<SoundscapeId>('off');
@@ -71,22 +89,55 @@ export default function App() {
   // Quick Reference Sheet modal
   const [referenceSubject, setReferenceSubject] = useState<SubjectId | null>(null);
 
-  // Sync user stats to local storage
+  // Sync user stats to local storage AND into the currently active account's isolated stats
   useEffect(() => {
     saveUserStats(userStats);
-  }, [userStats]);
+    setRegistrations((prev) =>
+      prev.map((reg) =>
+        reg.id === activeAccountId
+          ? {
+              ...reg,
+              fullName: userStats.userName,
+              questionsAnswered: userStats.totalQuestionsAnswered,
+              stats: userStats,
+            }
+          : reg
+      )
+    );
+  }, [userStats, activeAccountId]);
 
   // Sync registrations to local storage
   useEffect(() => {
     saveSiteRegistrations(registrations);
   }, [registrations]);
 
-  const handleAddRegistration = (newReg: SiteRegistration) => {
+  // Sync active account ID to local storage
+  useEffect(() => {
+    saveActiveAccountId(activeAccountId);
+  }, [activeAccountId]);
+
+  const handleSwitchAccount = (account: SiteRegistration) => {
+    setActiveAccountId(account.id);
+    setUserStats(account.stats);
+  };
+
+  const handleAddRegistration = (newReg: SiteRegistration, switchImmediately: boolean) => {
     setRegistrations((prev) => [newReg, ...prev]);
+    if (switchImmediately) {
+      setActiveAccountId(newReg.id);
+      setUserStats(newReg.stats);
+    }
   };
 
   const handleDeleteRegistration = (id: string) => {
-    setRegistrations((prev) => prev.filter((r) => r.id !== id));
+    setRegistrations((prev) => {
+      const remaining = prev.filter((r) => r.id !== id);
+      if (id === activeAccountId && remaining.length > 0) {
+        setActiveAccountId(remaining[0].id);
+        setUserStats(remaining[0].stats);
+      }
+      return remaining;
+    });
   };
 
   // Apply and persist UI settings (Theme: light/dark/system, Font Scale, Font Family, Line Spacing)
@@ -357,6 +408,9 @@ export default function App() {
             onUpdateUISettings={setUiSettings}
             onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
             onOpenRegistrationTab={() => setActiveTab('registration')}
+            registrations={registrations}
+            activeAccountId={activeAccountId}
+            onQuickSwitchAccount={handleSwitchAccount}
           />
 
           {/* Navigation Sub-Header with Ambient Sounds & Zen Mode */}
@@ -405,7 +459,7 @@ export default function App() {
                     }`}
                   >
                     <UserPlus className="w-4 h-4" />
-                    <span>Реєстрація учасника</span>
+                    <span>Акаунти учасників</span>
                     {registrations.length > 0 && (
                       <span className="font-mono text-[10px] bg-zinc-100 text-zinc-700 px-1.5 py-0.5 rounded">
                         {registrations.length}
@@ -539,13 +593,15 @@ export default function App() {
             onOpenMistakes={handleStartMistakesTest}
           />
         ) : activeTab === 'registration' ? (
-          /* 3. PARTICIPANT REGISTRATION VIEW */
+          /* 3. MULTI-ACCOUNT VIEW */
           <ParticipantRegistrationView
             registrations={registrations}
+            activeAccountId={activeAccountId}
+            onSwitchAccount={handleSwitchAccount}
             onAddRegistration={handleAddRegistration}
             onDeleteRegistration={handleDeleteRegistration}
             userStats={userStats}
-            onUpdateUserStats={setUserStats}
+            onGoToStats={() => setActiveTab('stats')}
           />
         ) : (
           /* 4. PERSONAL STATS & PROGRESS TRACKER VIEW */

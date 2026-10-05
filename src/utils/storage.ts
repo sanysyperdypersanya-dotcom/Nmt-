@@ -9,12 +9,165 @@ import {
 const STORAGE_KEY = 'nmt_prep_user_stats_v1';
 const UI_SETTINGS_KEY = 'nmt_prep_ui_settings_v1';
 const REGISTRATIONS_KEY = 'nmt_prep_site_registrations_v1';
+const ACTIVE_ACCOUNT_ID_KEY = 'nmt_prep_active_account_id_v1';
 
-export function loadSiteRegistrations(): SiteRegistration[] {
+export function createBlankUserStats(userName: string): UserStats {
+  const today = new Date().toISOString().split('T')[0];
+  return {
+    userName: userName.trim() || 'Учасник НМТ',
+    streakDays: 1,
+    lastActiveDate: today,
+    totalCompletedTests: 0,
+    totalQuestionsAnswered: 0,
+    totalCorrectAnswers: 0,
+    subjectStats: {
+      ukr: {
+        testsCompleted: 0,
+        questionsAnswered: 0,
+        correctAnswers: 0,
+        bestNmtScore: 0,
+        avgNmtScore: 0,
+        topicMastery: {},
+      },
+      math: {
+        testsCompleted: 0,
+        questionsAnswered: 0,
+        correctAnswers: 0,
+        bestNmtScore: 0,
+        avgNmtScore: 0,
+        topicMastery: {},
+      },
+      history: {
+        testsCompleted: 0,
+        questionsAnswered: 0,
+        correctAnswers: 0,
+        bestNmtScore: 0,
+        avgNmtScore: 0,
+        topicMastery: {},
+      },
+      eng: {
+        testsCompleted: 0,
+        questionsAnswered: 0,
+        correctAnswers: 0,
+        bestNmtScore: 0,
+        avgNmtScore: 0,
+        topicMastery: {},
+      },
+    },
+    history: [],
+    mistakeQuestionIds: [],
+  };
+}
+
+export function loadActiveAccountId(): string | null {
+  try {
+    return localStorage.getItem(ACTIVE_ACCOUNT_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveActiveAccountId(id: string | null): void {
+  try {
+    if (!id) {
+      localStorage.removeItem(ACTIVE_ACCOUNT_ID_KEY);
+    } else {
+      localStorage.setItem(ACTIVE_ACCOUNT_ID_KEY, id);
+    }
+  } catch (e) {
+    console.error('Failed to save active account id:', e);
+  }
+}
+
+export function loadSiteRegistrations(fallbackPrimaryStats?: UserStats): SiteRegistration[] {
   try {
     const raw = localStorage.getItem(REGISTRATIONS_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as SiteRegistration[];
+    if (raw) {
+      const parsed = JSON.parse(raw) as any[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((item) => {
+          const fullName = item.fullName || 'Учасник НМТ';
+          const stats: UserStats = item.stats
+            ? { ...createBlankUserStats(fullName), ...item.stats, userName: fullName }
+            : createBlankUserStats(fullName);
+          return {
+            id: item.id || `ACC-${Date.now().toString().slice(-6)}`,
+            registeredAt: item.registeredAt || new Date().toLocaleDateString('uk-UA'),
+            fullName,
+            email: item.email || 'student@ukr.net',
+            phone: item.phone || '+380 (67) 000-00-00',
+            schoolOrCity: item.schoolOrCity || 'м. Київ',
+            targetScore: Number(item.targetScore) || 185,
+            pinCode: item.pinCode || '',
+            questionsAnswered: stats.totalQuestionsAnswered,
+            stats,
+          };
+        });
+      }
+    }
+
+    // Seed initial multi-account demo profiles on this device so user can switch between accounts immediately
+    const primaryStats = fallbackPrimaryStats || loadUserStats();
+    const primaryName =
+      primaryStats.userName && primaryStats.userName !== 'Майбутній студент'
+        ? primaryStats.userName
+        : 'Олександр Коваленко';
+    const acc1Stats: UserStats = {
+      ...primaryStats,
+      userName: primaryName,
+    };
+
+    const acc2Stats = createBlankUserStats('Марія Шевченко');
+    acc2Stats.streakDays = 4;
+    acc2Stats.totalCompletedTests = 2;
+    acc2Stats.totalQuestionsAnswered = 15;
+    acc2Stats.totalCorrectAnswers = 13;
+    acc2Stats.subjectStats.ukr = {
+      testsCompleted: 1,
+      questionsAnswered: 10,
+      correctAnswers: 9,
+      bestNmtScore: 186,
+      avgNmtScore: 186,
+      topicMastery: { 'Орфографія': { total: 5, correct: 5 } },
+    };
+    acc2Stats.subjectStats.math = {
+      testsCompleted: 1,
+      questionsAnswered: 5,
+      correctAnswers: 4,
+      bestNmtScore: 178,
+      avgNmtScore: 178,
+      topicMastery: { 'Рівняння та нерівності': { total: 5, correct: 4 } },
+    };
+
+    const initialAccounts: SiteRegistration[] = [
+      {
+        id: 'ACC-1001',
+        registeredAt: '05.10.2026, 10:15:00',
+        fullName: primaryName,
+        email: 'oleksandr.nmt@ukr.net',
+        phone: '+380 (67) 451-20-19',
+        schoolOrCity: 'м. Київ, Ліцей №142',
+        targetScore: 192,
+        pinCode: '',
+        questionsAnswered: acc1Stats.totalQuestionsAnswered,
+        stats: acc1Stats,
+      },
+      {
+        id: 'ACC-1002',
+        registeredAt: '05.10.2026, 11:30:00',
+        fullName: 'Марія Шевченко',
+        email: 'maria.shevchenko@ukr.net',
+        phone: '+380 (50) 812-34-56',
+        schoolOrCity: 'м. Львів, Академічна гімназія',
+        targetScore: 188,
+        pinCode: '',
+        questionsAnswered: acc2Stats.totalQuestionsAnswered,
+        stats: acc2Stats,
+      },
+    ];
+
+    saveSiteRegistrations(initialAccounts);
+    return initialAccounts;
   } catch (e) {
     console.error('Failed to load registrations:', e);
     return [];
