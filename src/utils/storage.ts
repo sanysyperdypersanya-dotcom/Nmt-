@@ -1,7 +1,58 @@
-import { SubjectId, UserStats, TestSession, UISettings } from '../types/nmt';
+import {
+  SubjectId,
+  UserStats,
+  TestSession,
+  UISettings,
+  SiteRegistration,
+  ConnectedSheetConfig,
+} from '../types/nmt';
 
 const STORAGE_KEY = 'nmt_prep_user_stats_v1';
 const UI_SETTINGS_KEY = 'nmt_prep_ui_settings_v1';
+const REGISTRATIONS_KEY = 'nmt_prep_site_registrations_v1';
+const SHEET_CONFIG_KEY = 'nmt_prep_sheet_config_v1';
+
+export function loadSiteRegistrations(): SiteRegistration[] {
+  try {
+    const raw = localStorage.getItem(REGISTRATIONS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as SiteRegistration[];
+  } catch (e) {
+    console.error('Failed to load registrations:', e);
+    return [];
+  }
+}
+
+export function saveSiteRegistrations(registrations: SiteRegistration[]): void {
+  try {
+    localStorage.setItem(REGISTRATIONS_KEY, JSON.stringify(registrations));
+  } catch (e) {
+    console.error('Failed to save registrations:', e);
+  }
+}
+
+export function loadConnectedSheetConfig(): ConnectedSheetConfig | null {
+  try {
+    const raw = localStorage.getItem(SHEET_CONFIG_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as ConnectedSheetConfig;
+  } catch (e) {
+    console.error('Failed to load sheet config:', e);
+    return null;
+  }
+}
+
+export function saveConnectedSheetConfig(config: ConnectedSheetConfig | null): void {
+  try {
+    if (!config) {
+      localStorage.removeItem(SHEET_CONFIG_KEY);
+    } else {
+      localStorage.setItem(SHEET_CONFIG_KEY, JSON.stringify(config));
+    }
+  } catch (e) {
+    console.error('Failed to save sheet config:', e);
+  }
+}
 
 export const DEFAULT_UI_SETTINGS: UISettings = {
   theme: 'light',

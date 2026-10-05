@@ -4,7 +4,16 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { SubjectId, TestSession, UserStats, UISettings, Question } from './types/nmt';
+import { User } from 'firebase/auth';
+import {
+  SubjectId,
+  TestSession,
+  UserStats,
+  UISettings,
+  Question,
+  SiteRegistration,
+  ConnectedSheetConfig,
+} from './types/nmt';
 import { NMT_QUESTIONS } from './data/questions';
 import {
   loadUserStats,
@@ -12,8 +21,13 @@ import {
   recordTestSessionResult,
   loadUISettings,
   saveUISettings,
+  loadSiteRegistrations,
+  saveSiteRegistrations,
+  loadConnectedSheetConfig,
+  saveConnectedSheetConfig,
 } from './utils/storage';
 import { SoundscapeId, ambientAudio } from './utils/ambientAudio';
+import { initAuth, googleSignIn } from './utils/googleWorkspace';
 
 import { HeaderTimer } from './components/HeaderTimer';
 import { SubjectSelector } from './components/SubjectSelector';
@@ -23,14 +37,34 @@ import { PersonalStatsView } from './components/PersonalStatsView';
 import { ReferenceModal } from './components/ReferenceModal';
 import { InterfaceSettingsModal } from './components/InterfaceSettingsModal';
 import { AmbientZenBar } from './components/AmbientZenBar';
+import { GoogleSheetsRegistrationsView } from './components/GoogleSheetsRegistrationsView';
 
-import { LayoutGrid, BarChart2, BookOpen, ShieldCheck, Sliders, Sparkles } from 'lucide-react';
+import {
+  LayoutGrid,
+  BarChart2,
+  BookOpen,
+  Sliders,
+  Sparkles,
+  FileSpreadsheet,
+} from 'lucide-react';
 
 export default function App() {
   const [userStats, setUserStats] = useState<UserStats>(loadUserStats);
   const [uiSettings, setUiSettings] = useState<UISettings>(loadUISettings);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'subjects' | 'stats'>('subjects');
+  const [activeTab, setActiveTab] = useState<'subjects' | 'stats' | 'sheets'>('subjects');
+
+  // Google Workspace Auth & Site Registrations state
+  const [googleUser, setGoogleUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [needsAuth, setNeedsAuth] = useState<boolean>(true);
+  const [registrations, setRegistrations] = useState<SiteRegistration[]>(loadSiteRegistrations);
+  const [sheetConfig, setSheetConfig] = useState<ConnectedSheetConfig | null>(
+    loadConnectedSheetConfig
+  );
+  const [pendingWriteRegistrations, setPendingWriteRegistrations] = useState<
+    SiteRegistration[] | null
+  >(null);
 
   // Background Sounds & Zen Mode state
   const [activeSound, setActiveSound] = useState<SoundscapeId>('off');
@@ -55,6 +89,106 @@ export default function App() {
   useEffect(() => {
     saveUserStats(userStats);
   }, [userStats]);
+
+  // Sync registrations to local storage
+  useEffect(() => {
+    saveSiteRegistrations(registrations);
+  }, [registrations]);
+
+  // Sync connected Google Sheet config to local storage
+  useEffect(() => {
+    saveConnectedSheetConfig(sheetConfig);
+  }, [sheetConfig]);
+
+  // Initialize Google Workspace / Firebase Auth listener
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (user, token) => {
+        setGoogleUser(user);
+        setAccessToken(token);
+        setNeedsAuth(false);
+      },
+      (user) => {
+        setGoogleUser(user);
+        setAccessToken(null);
+        setNeedsAuth(true);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
+  const handleAuthChange = (user: User | null, token: string | null) => {
+    setGoogleUser(user);
+    setAccessToken(token);
+    setNeedsAuth(!token);
+
+    if (user && token) {
+      const displayName = user.displayName || user.email?.split('@')[0] || 'Учасник НМТ';
+      const userEmail = user.email || 'no-email@google.com';
+
+      if (userStats.userName === 'Майбутній студент' && displayName) {
+        setUserStats((prev) => ({ ...prev, userName: displayName }));
+      }
+
+      // Automatically record registration if this Google email hasn't registered yet
+      const alreadyRegistered = registrations.some(
+        (r) => r.email.toLowerCase() === userEmail.toLowerCase()
+      );
+      if (!alreadyRegistered) {
+        const nowFormatted = new Date().toLocaleString('uk-UA', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        });
+        const autoReg: SiteRegistration = {
+          id: `REG-${Date.now().toString().slice(-6)}`,
+          registeredAt: nowFormatted,
+          fullName: displayName,
+          email: userEmail,
+          schoolOrCity: 'Google Реєстрація',
+          targetScore: 185,
+          authMethod: 'google',
+          questionsAnswered: userStats.totalQuestionsAnswered,
+          syncedToSheets: false,
+        };
+        setRegistrations((prev) => [autoReg, ...prev]);
+        setPendingWriteRegistrations([autoReg]);
+      }
+    }
+  };
+
+  const handleQuickHeaderGoogleSignIn = async () => {
+    try {
+      const result = await googleSignIn();
+      if (result) {
+        handleAuthChange(result.user, result.accessToken);
+        setActiveTab('sheets');
+      }
+    } catch (err) {
+      console.error('Quick Google Sign-In failed:', err);
+      setActiveTab('sheets');
+    }
+  };
+
+  const handleAddRegistration = (newReg: SiteRegistration, promptWrite = false) => {
+    setRegistrations((prev) => [newReg, ...prev]);
+    if (promptWrite) {
+      setPendingWriteRegistrations([newReg]);
+    }
+  };
+
+  const handleMarkRegistrationsSynced = (ids: string[], spreadsheetId: string) => {
+    setRegistrations((prev) =>
+      prev.map((reg) =>
+        ids.includes(reg.id)
+          ? { ...reg, syncedToSheets: true, syncedSpreadsheetId: spreadsheetId }
+          : reg
+      )
+    );
+  };
 
   // Apply and persist UI settings (Theme: light/dark/system, Font Scale, Font Family, Line Spacing)
   useEffect(() => {
@@ -323,13 +457,16 @@ export default function App() {
             uiSettings={uiSettings}
             onUpdateUISettings={setUiSettings}
             onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+            isGoogleConnected={!needsAuth && Boolean(accessToken)}
+            onQuickGoogleSignIn={handleQuickHeaderGoogleSignIn}
+            onOpenSheetsTab={() => setActiveTab('sheets')}
           />
 
           {/* Navigation Sub-Header with Ambient Sounds & Zen Mode */}
           {!activeTestSession && (
             <div className="border-b border-zinc-200 bg-white sticky top-0 z-20">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-1">
+                <div className="flex flex-wrap items-center gap-1">
                   <button
                     type="button"
                     onClick={() => setActiveTab('subjects')}
@@ -359,6 +496,22 @@ export default function App() {
                         {userStats.totalCompletedTests}
                       </span>
                     )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('sheets')}
+                    className={`py-3.5 px-4 text-xs font-semibold border-b-2 transition-all flex items-center gap-2 ${
+                      activeTab === 'sheets'
+                        ? 'border-emerald-700 text-emerald-800'
+                        : 'border-transparent text-zinc-500 hover:text-zinc-900'
+                    }`}
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                    <span>Реєстрація та Google Sheets</span>
+                    <span className="font-mono text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded">
+                      {registrations.length}
+                    </span>
                   </button>
                 </div>
 
@@ -486,8 +639,25 @@ export default function App() {
             onOpenReference={(subId) => setReferenceSubject(subId)}
             onOpenMistakes={handleStartMistakesTest}
           />
+        ) : activeTab === 'sheets' ? (
+          /* 3. SITE REGISTRATIONS & GOOGLE SHEETS SYNC VIEW */
+          <GoogleSheetsRegistrationsView
+            user={googleUser}
+            accessToken={accessToken}
+            needsAuth={needsAuth}
+            onAuthChange={handleAuthChange}
+            registrations={registrations}
+            onAddRegistration={handleAddRegistration}
+            onMarkRegistrationsSynced={handleMarkRegistrationsSynced}
+            sheetConfig={sheetConfig}
+            onUpdateSheetConfig={setSheetConfig}
+            userStats={userStats}
+            onUpdateUserStats={setUserStats}
+            pendingWriteRegistrations={pendingWriteRegistrations}
+            onClearPendingWrite={() => setPendingWriteRegistrations(null)}
+          />
         ) : (
-          /* 3. PERSONAL STATS & PROGRESS TRACKER VIEW */
+          /* 4. PERSONAL STATS & PROGRESS TRACKER VIEW */
           <PersonalStatsView
             userStats={userStats}
             onUpdateStats={setUserStats}

@@ -120,3 +120,25 @@ export interface UserStats {
   history: TestSession[];
   mistakeQuestionIds: string[];
 }
+
+export interface SiteRegistration {
+  id: string;
+  registeredAt: string;
+  fullName: string;
+  email: string;
+  schoolOrCity: string;
+  targetScore: number;
+  authMethod: 'google' | 'form';
+  questionsAnswered: number;
+  syncedToSheets: boolean;
+  syncedSpreadsheetId?: string;
+}
+
+export interface ConnectedSheetConfig {
+  spreadsheetId: string;
+  spreadsheetTitle: string;
+  spreadsheetUrl?: string;
+  sheetTabTitle: string;
+  autoPromptWriteOnRegister: boolean;
+}
+
