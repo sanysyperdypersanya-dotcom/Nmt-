@@ -128,17 +128,7 @@ export interface SiteRegistration {
   email: string;
   schoolOrCity: string;
   targetScore: number;
-  authMethod: 'google' | 'form';
   questionsAnswered: number;
-  syncedToSheets: boolean;
-  syncedSpreadsheetId?: string;
 }
 
-export interface ConnectedSheetConfig {
-  spreadsheetId: string;
-  spreadsheetTitle: string;
-  spreadsheetUrl?: string;
-  sheetTabTitle: string;
-  autoPromptWriteOnRegister: boolean;
-}
 

@@ -11,11 +11,10 @@ import {
   Moon,
   Monitor,
   Sliders,
-  FileSpreadsheet,
+  UserPlus,
 } from 'lucide-react';
 import { formatTime } from '../utils/scoring';
 import { UISettings, ThemeMode } from '../types/nmt';
-import { GoogleSignInButton } from './GoogleSheetsRegistrationsView';
 
 interface HeaderTimerProps {
   streakDays: number;
@@ -24,9 +23,7 @@ interface HeaderTimerProps {
   uiSettings: UISettings;
   onUpdateUISettings: (settings: UISettings) => void;
   onOpenSettingsModal: () => void;
-  isGoogleConnected?: boolean;
-  onQuickGoogleSignIn?: () => void;
-  onOpenSheetsTab?: () => void;
+  onOpenRegistrationTab?: () => void;
 }
 
 export const HeaderTimer: React.FC<HeaderTimerProps> = ({
@@ -36,9 +33,7 @@ export const HeaderTimer: React.FC<HeaderTimerProps> = ({
   uiSettings,
   onUpdateUISettings,
   onOpenSettingsModal,
-  isGoogleConnected,
-  onQuickGoogleSignIn,
-  onOpenSheetsTab,
+  onOpenRegistrationTab,
 }) => {
   // 1. Live Countdown to official NMT 2027 session (Starts approx. May 18, 2027 10:00:00 EEST)
   const targetDate = new Date('2027-05-18T10:00:00+03:00').getTime();
@@ -359,31 +354,23 @@ export const HeaderTimer: React.FC<HeaderTimerProps> = ({
             </span>
           </div>
 
-          {/* User Avatar & Google Sheets Registration Trigger */}
+          {/* User Avatar & Participant Registration Trigger */}
           <div className="flex items-center gap-2 pl-3 border-l border-zinc-200">
-            {!isGoogleConnected && onQuickGoogleSignIn ? (
-              <GoogleSignInButton
-                onClick={onQuickGoogleSignIn}
-                compact
-                label="Sign in with Google"
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={onOpenSheetsTab}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold transition-colors cursor-pointer"
-                title="Відкрити таблицю реєстрацій Google Sheets"
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="hidden md:inline">Google Sheets</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={onOpenRegistrationTab}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 text-zinc-800 text-xs font-semibold transition-colors cursor-pointer"
+              title="Реєстрація учасника НМТ 2027"
+            >
+              <UserPlus className="w-3.5 h-3.5 text-zinc-700" />
+              <span className="hidden md:inline">Реєстрація</span>
+            </button>
 
             <button
               type="button"
-              onClick={onOpenSheetsTab}
+              onClick={onOpenRegistrationTab}
               className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity cursor-pointer"
-              title="Реєстрація учасника та Google Sheets"
+              title="Профіль учасника НМТ 2027"
             >
               <div className="w-8 h-8 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-700 flex items-center justify-center font-bold text-xs">
                 {userName.slice(0, 1).toUpperCase()}

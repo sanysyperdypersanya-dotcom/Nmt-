@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { User } from 'firebase/auth';
 import {
   SubjectId,
   TestSession,
@@ -12,7 +11,6 @@ import {
   UISettings,
   Question,
   SiteRegistration,
-  ConnectedSheetConfig,
 } from './types/nmt';
 import { NMT_QUESTIONS } from './data/questions';
 import {
@@ -23,11 +21,8 @@ import {
   saveUISettings,
   loadSiteRegistrations,
   saveSiteRegistrations,
-  loadConnectedSheetConfig,
-  saveConnectedSheetConfig,
 } from './utils/storage';
 import { SoundscapeId, ambientAudio } from './utils/ambientAudio';
-import { initAuth, googleSignIn } from './utils/googleWorkspace';
 
 import { HeaderTimer } from './components/HeaderTimer';
 import { SubjectSelector } from './components/SubjectSelector';
@@ -37,7 +32,7 @@ import { PersonalStatsView } from './components/PersonalStatsView';
 import { ReferenceModal } from './components/ReferenceModal';
 import { InterfaceSettingsModal } from './components/InterfaceSettingsModal';
 import { AmbientZenBar } from './components/AmbientZenBar';
-import { GoogleSheetsRegistrationsView } from './components/GoogleSheetsRegistrationsView';
+import { ParticipantRegistrationView } from './components/ParticipantRegistrationView';
 
 import {
   LayoutGrid,
@@ -45,26 +40,17 @@ import {
   BookOpen,
   Sliders,
   Sparkles,
-  FileSpreadsheet,
+  UserPlus,
 } from 'lucide-react';
 
 export default function App() {
   const [userStats, setUserStats] = useState<UserStats>(loadUserStats);
   const [uiSettings, setUiSettings] = useState<UISettings>(loadUISettings);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'subjects' | 'stats' | 'sheets'>('subjects');
+  const [activeTab, setActiveTab] = useState<'subjects' | 'stats' | 'registration'>('subjects');
 
-  // Google Workspace Auth & Site Registrations state
-  const [googleUser, setGoogleUser] = useState<User | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [needsAuth, setNeedsAuth] = useState<boolean>(true);
+  // Participant Registrations state
   const [registrations, setRegistrations] = useState<SiteRegistration[]>(loadSiteRegistrations);
-  const [sheetConfig, setSheetConfig] = useState<ConnectedSheetConfig | null>(
-    loadConnectedSheetConfig
-  );
-  const [pendingWriteRegistrations, setPendingWriteRegistrations] = useState<
-    SiteRegistration[] | null
-  >(null);
 
   // Background Sounds & Zen Mode state
   const [activeSound, setActiveSound] = useState<SoundscapeId>('off');
@@ -95,99 +81,12 @@ export default function App() {
     saveSiteRegistrations(registrations);
   }, [registrations]);
 
-  // Sync connected Google Sheet config to local storage
-  useEffect(() => {
-    saveConnectedSheetConfig(sheetConfig);
-  }, [sheetConfig]);
-
-  // Initialize Google Workspace / Firebase Auth listener
-  useEffect(() => {
-    const unsubscribe = initAuth(
-      (user, token) => {
-        setGoogleUser(user);
-        setAccessToken(token);
-        setNeedsAuth(false);
-      },
-      (user) => {
-        setGoogleUser(user);
-        setAccessToken(null);
-        setNeedsAuth(true);
-      }
-    );
-    return () => unsubscribe();
-  }, []);
-
-  const handleAuthChange = (user: User | null, token: string | null) => {
-    setGoogleUser(user);
-    setAccessToken(token);
-    setNeedsAuth(!token);
-
-    if (user && token) {
-      const displayName = user.displayName || user.email?.split('@')[0] || 'Учасник НМТ';
-      const userEmail = user.email || 'no-email@google.com';
-
-      if (userStats.userName === 'Майбутній студент' && displayName) {
-        setUserStats((prev) => ({ ...prev, userName: displayName }));
-      }
-
-      // Automatically record registration if this Google email hasn't registered yet
-      const alreadyRegistered = registrations.some(
-        (r) => r.email.toLowerCase() === userEmail.toLowerCase()
-      );
-      if (!alreadyRegistered) {
-        const nowFormatted = new Date().toLocaleString('uk-UA', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        });
-        const autoReg: SiteRegistration = {
-          id: `REG-${Date.now().toString().slice(-6)}`,
-          registeredAt: nowFormatted,
-          fullName: displayName,
-          email: userEmail,
-          schoolOrCity: 'Google Реєстрація',
-          targetScore: 185,
-          authMethod: 'google',
-          questionsAnswered: userStats.totalQuestionsAnswered,
-          syncedToSheets: false,
-        };
-        setRegistrations((prev) => [autoReg, ...prev]);
-        setPendingWriteRegistrations([autoReg]);
-      }
-    }
-  };
-
-  const handleQuickHeaderGoogleSignIn = async () => {
-    try {
-      const result = await googleSignIn();
-      if (result) {
-        handleAuthChange(result.user, result.accessToken);
-        setActiveTab('sheets');
-      }
-    } catch (err) {
-      console.error('Quick Google Sign-In failed:', err);
-      setActiveTab('sheets');
-    }
-  };
-
-  const handleAddRegistration = (newReg: SiteRegistration, promptWrite = false) => {
+  const handleAddRegistration = (newReg: SiteRegistration) => {
     setRegistrations((prev) => [newReg, ...prev]);
-    if (promptWrite) {
-      setPendingWriteRegistrations([newReg]);
-    }
   };
 
-  const handleMarkRegistrationsSynced = (ids: string[], spreadsheetId: string) => {
-    setRegistrations((prev) =>
-      prev.map((reg) =>
-        ids.includes(reg.id)
-          ? { ...reg, syncedToSheets: true, syncedSpreadsheetId: spreadsheetId }
-          : reg
-      )
-    );
+  const handleDeleteRegistration = (id: string) => {
+    setRegistrations((prev) => prev.filter((r) => r.id !== id));
   };
 
   // Apply and persist UI settings (Theme: light/dark/system, Font Scale, Font Family, Line Spacing)
@@ -426,9 +325,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900 flex flex-col font-sans selection:bg-zinc-200">
-      {/* 1. IF ZEN MODE IS ACTIVE: Minimalist Floating Zen Control Bar */}
+      {/* 1. IF ZEN MODE IS ACTIVE: Minimalist Zen Control Bar */}
       {isZenMode ? (
-        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-xs border-b border-zinc-200 px-4 py-2.5">
+        <div className="bg-white border-b border-zinc-200 px-4 py-2.5">
           <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs font-bold text-zinc-900">
               <Sparkles className="w-4 h-4 text-emerald-600" />
@@ -457,14 +356,12 @@ export default function App() {
             uiSettings={uiSettings}
             onUpdateUISettings={setUiSettings}
             onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
-            isGoogleConnected={!needsAuth && Boolean(accessToken)}
-            onQuickGoogleSignIn={handleQuickHeaderGoogleSignIn}
-            onOpenSheetsTab={() => setActiveTab('sheets')}
+            onOpenRegistrationTab={() => setActiveTab('registration')}
           />
 
           {/* Navigation Sub-Header with Ambient Sounds & Zen Mode */}
           {!activeTestSession && (
-            <div className="border-b border-zinc-200 bg-white sticky top-0 z-20">
+            <div className="border-b border-zinc-200 bg-white">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-1">
                   <button
@@ -500,18 +397,20 @@ export default function App() {
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab('sheets')}
+                    onClick={() => setActiveTab('registration')}
                     className={`py-3.5 px-4 text-xs font-semibold border-b-2 transition-all flex items-center gap-2 ${
-                      activeTab === 'sheets'
-                        ? 'border-emerald-700 text-emerald-800'
+                      activeTab === 'registration'
+                        ? 'border-zinc-950 text-zinc-950'
                         : 'border-transparent text-zinc-500 hover:text-zinc-900'
                     }`}
                   >
-                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                    <span>Реєстрація та Google Sheets</span>
-                    <span className="font-mono text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded">
-                      {registrations.length}
-                    </span>
+                    <UserPlus className="w-4 h-4" />
+                    <span>Реєстрація учасника</span>
+                    {registrations.length > 0 && (
+                      <span className="font-mono text-[10px] bg-zinc-100 text-zinc-700 px-1.5 py-0.5 rounded">
+                        {registrations.length}
+                      </span>
+                    )}
                   </button>
                 </div>
 
@@ -639,22 +538,14 @@ export default function App() {
             onOpenReference={(subId) => setReferenceSubject(subId)}
             onOpenMistakes={handleStartMistakesTest}
           />
-        ) : activeTab === 'sheets' ? (
-          /* 3. SITE REGISTRATIONS & GOOGLE SHEETS SYNC VIEW */
-          <GoogleSheetsRegistrationsView
-            user={googleUser}
-            accessToken={accessToken}
-            needsAuth={needsAuth}
-            onAuthChange={handleAuthChange}
+        ) : activeTab === 'registration' ? (
+          /* 3. PARTICIPANT REGISTRATION VIEW */
+          <ParticipantRegistrationView
             registrations={registrations}
             onAddRegistration={handleAddRegistration}
-            onMarkRegistrationsSynced={handleMarkRegistrationsSynced}
-            sheetConfig={sheetConfig}
-            onUpdateSheetConfig={setSheetConfig}
+            onDeleteRegistration={handleDeleteRegistration}
             userStats={userStats}
             onUpdateUserStats={setUserStats}
-            pendingWriteRegistrations={pendingWriteRegistrations}
-            onClearPendingWrite={() => setPendingWriteRegistrations(null)}
           />
         ) : (
           /* 4. PERSONAL STATS & PROGRESS TRACKER VIEW */
