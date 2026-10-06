@@ -442,9 +442,10 @@ export const ZNO_PROSTE_QUESTIONS: Question[] = [
     id: 'math-zno-11',
     subjectId: 'math',
     topic: 'Координати та вектори у просторі',
-    yearOrSource: 'ЗНО UA · Вектори',
+    yearOrSource: 'ЗНО UA · Вектори з рисунком',
     type: 'numeric',
-    text: 'У прямокутній системі координат у просторі задано вектори a(3; -2; 4) і b(2; m; 1). При якому значенні m вектори a і b перпендикулярні?',
+    diagramId: 'math-zno-11',
+    text: 'На рисунку зображено перпендикулярні вектори a(3; -2; 4) і b(2; m; 1) у прямокутній системі координат у просторі. При якому значенні m вектори a і b перпендикулярні?',
     correctNumeric: 5,
     maxPoints: 2,
     explanation:
@@ -456,7 +457,8 @@ export const ZNO_PROSTE_QUESTIONS: Question[] = [
     topic: 'Координати та вектори у просторі',
     yearOrSource: 'Просте ЗНО · Координати і вектори',
     type: 'numeric',
-    text: 'Знайдіть модуль (довжину) вектора a(3; -4; 12) у просторі.',
+    diagramId: 'math-zno-12',
+    text: 'На рисунку у прямокутній системі координат у просторі зображено вектор a(3; -4; 12). Знайдіть модуль (довжину) вектора |a|.',
     correctNumeric: 13,
     maxPoints: 2,
     explanation:
@@ -468,7 +470,8 @@ export const ZNO_PROSTE_QUESTIONS: Question[] = [
     topic: 'Координати та вектори у просторі',
     yearOrSource: 'ЗНО UA · Координати у просторі',
     type: 'single',
-    text: 'Точка M — середина відрізка AB, де A(-2; 4; 6) і B(6; -2; 0). Знайдіть координати точки M.',
+    diagramId: 'math-zno-13',
+    text: 'На рисунку точка M — середина відрізка AB у просторі, де A(-2; 4; 6) і B(6; -2; 0). Знайдіть координати точки M.',
     options: [
       { id: 'А', text: '(2; 1; 3)' },
       { id: 'Б', text: '(4; 2; 6)' },
@@ -984,25 +987,27 @@ export const ZNO_PROSTE_QUESTIONS: Question[] = [
     id: 'math-zno-16',
     subjectId: 'math',
     topic: 'Планіметрія',
-    yearOrSource: 'ЗНО UA · Коло та трикутник',
+    yearOrSource: 'ЗНО UA · Коло та трикутник (з рисунком)',
     type: 'numeric',
-    text: 'У прямокутному трикутнику катети дорівнюють 9 см і 12 см. Знайдіть радіус кола (у см), описаного навколо цього трикутника.',
+    diagramId: 'math-zno-16',
+    text: 'На рисунку навколо прямокутного трикутника ABC (∠C = 90°) із катетами AC = 9 см і BC = 12 см описано коло з центром O. Знайдіть радіус R цього кола (у см).',
     correctNumeric: 7.5,
     maxPoints: 2,
     explanation:
-      'За теоремою Піфагора гіпотенуза c = √(9² + 12²) = √(81 + 144) = √225 = 15 см. Радіус кола, описаного навколо прямокутного трикутника, дорівнює половині гіпотенузи: R = c / 2 = 15 / 2 = 7,5 см.',
+      'За теоремою Піфагора гіпотенуза AB = √(9² + 12²) = √(81 + 144) = √225 = 15 см. Радіус кола, описаного навколо прямокутного трикутника, дорівнює половині гіпотенузи: R = AB / 2 = 15 / 2 = 7,5 см.',
   },
   {
     id: 'math-zno-17',
     subjectId: 'math',
     topic: 'Стереометрія',
-    yearOrSource: 'Просте ЗНО · Тіла обертання',
+    yearOrSource: 'Просте ЗНО · Тіла обертання (з рисунком)',
     type: 'numeric',
-    text: 'Радіус основи конуса дорівнює 6 см, а його висота — 8 см. Знайдіть довжину твірної конуса (у см).',
+    diagramId: 'math-zno-17',
+    text: 'На рисунку зображено конус, радіус основи якого R = 6 см, а висота H = 8 см. Знайдіть довжину твірної l цього конуса (у см).',
     correctNumeric: 10,
     maxPoints: 2,
     explanation:
-      'Радіус основи R, висота H і твірна l конуса утворюють прямокутний трикутник: l = √(R² + H²) = √(6² + 8²) = √(36 + 64) = √100 = 10 см.',
+      'Радіус основи R, висота H і твірна l конуса утворюють прямокутний трикутник SOA: l = √(R² + H²) = √(6² + 8²) = √(36 + 64) = √100 = 10 см.',
   },
   {
     id: 'hist-zno-11',
@@ -1136,6 +1141,55 @@ export const ZNO_PROSTE_QUESTIONS: Question[] = [
     maxPoints: 1,
     explanation:
       'In a non-defining relative clause (separated by commas) referring to a city/thing as the subject ("...is the capital"), we must use "which" ("that" cannot be used after a comma).',
+  },
+  {
+    id: 'eng-read-5',
+    subjectId: 'eng',
+    topic: 'Reading & Comprehension',
+    yearOrSource: 'НМТ · Task 2 (Author’s Purpose & Attitude)',
+    title: 'The Architecture of Sponge Cities',
+    type: 'single',
+    context:
+      'Paragraph 1: For over a century, modern urban planning treated rainwater as a nuisance to be drained away as rapidly as possible through concrete channels and underground pipes. However, as extreme downpours become more frequent, impermeable asphalt streets often overwhelm drainage networks, causing flash floods right alongside summer droughts.\n\nParagraph 2: In response, landscape architects across Europe and Asia are redesigning metropolises as "sponge cities." Instead of sealing the ground with concrete, engineers replace conventional pavements with porous surfaces, create sunken rain gardens, and restore urban wetlands that absorb storm runoff like a natural sponge.\n\nParagraph 3: During dry months, the filtered water stored in underground aquifers is reused to irrigate public parks and cool surrounding neighbourhoods through evaporation, lowering urban temperatures by up to three degrees Celsius.',
+    text: 'What is the main purpose of the article?',
+    options: [
+      { id: 'A', text: 'To warn citizens against visiting public parks during heavy summer rainstorms.' },
+      { id: 'B', text: 'To explain how nature-based urban design can mitigate both flooding and city heat.' },
+      { id: 'C', text: 'To argue that underground sewage pipes should be completely demolished in all cities.' },
+      { id: 'D', text: 'To compare the cost of asphalt roads in Europe and Asia.' },
+    ],
+    correctOptionId: 'B',
+    maxPoints: 1,
+    explanation:
+      'The article explains how the "sponge city" concept uses porous surfaces, rain gardens, and wetlands to absorb floodwater and reuse it during dry periods to cool urban areas.',
+  },
+  {
+    id: 'eng-read-6',
+    subjectId: 'eng',
+    topic: 'Reading & Comprehension',
+    yearOrSource: 'НМТ · Task 3 (Multiple Matching)',
+    title: 'Four Student Summer Internships',
+    type: 'matching',
+    context:
+      '1. Marine Conservation Intern (Cornwall): Interns spend four weeks aboard a coastal research vessel monitoring dolphin pods and recording underwater acoustic data. Accommodation in a shared hostel near the harbour is included, though interns are expected to prepare their own meals.\n\n2. Botanical Archive Assistant (Edinburgh): Working alongside university taxonomists, participants catalogue nineteenth-century plant specimens and update the digital herbarium database. Applicants must demonstrate strong attention to detail and basic familiarity with spreadsheet software.\n\n3. Alpine Trail Restoration Crew (Tyrol): This physically demanding placement involves repairing wooden footbridges and clearing mountain paths damaged by winter avalanches. Because the team camps at high altitudes, participants must bring waterproof hiking boots and cold-weather gear.\n\n4. Science Festival Coordinator (Manchester): Ideal for outgoing communicators, this paid two-week role involves welcoming guest speakers, managing ticket queues, and assisting school groups during interactive robotics workshops.',
+    text: 'Match each internship (1–4) with the question (A–E) that refers to it. There is one extra option.',
+    matchingLeft: [
+      { id: '1', num: 1, text: '1. Marine Conservation Intern' },
+      { id: '2', num: 2, text: '2. Botanical Archive Assistant' },
+      { id: '3', num: 3, text: '3. Alpine Trail Restoration Crew' },
+      { id: '4', num: 4, text: '4. Science Festival Coordinator' },
+    ],
+    matchingRight: [
+      { id: 'A', letter: 'A', text: 'Which internship requires candidates to have computer data-entry skills?' },
+      { id: 'B', letter: 'B', text: 'Which internship provides free lodging by the sea but does not cover food?' },
+      { id: 'C', letter: 'C', text: 'Which internship offers financial remuneration and involves working with the public?' },
+      { id: 'D', letter: 'D', text: 'Which internship requires stamina and specialized outdoor clothing?' },
+      { id: 'E', letter: 'E', text: 'Which internship requires a professional scuba-diving licence?' },
+    ],
+    correctMatching: { '1': 'B', '2': 'A', '3': 'D', '4': 'C' },
+    maxPoints: 4,
+    explanation:
+      '1-B: "Accommodation in a shared hostel near the harbour is included... prepare their own meals". 2-A: "update the digital herbarium database... familiarity with spreadsheet software". 3-D: "physically demanding... bring waterproof hiking boots and cold-weather gear". 4-C: "paid two-week role... welcoming guest speakers, managing ticket queues".',
   },
 ];
 

@@ -13,7 +13,10 @@ import {
   SiteRegistration,
 } from './types/nmt';
 import { NMT_QUESTIONS } from './data/questions';
-import { pickSmartShuffledQuestions } from './utils/questionRandomizer';
+import {
+  pickSmartShuffledQuestions,
+  buildOfficialNmtSubjectBlock,
+} from './utils/questionRandomizer';
 import { getCurrentNmtYear } from './utils/scoring';
 import {
   loadUserStats,
@@ -200,8 +203,9 @@ export default function App() {
       // Strictly 5 smart-shuffled questions with anti-repetition cooldown
       pool = pickSmartShuffledQuestions(subjectPool, 5, userStats);
     } else {
-      // Standard 25-question NMT block variant drawn from the full subject bank with anti-repetition memory
-      pool = pickSmartShuffledQuestions(subjectPool, 25, userStats);
+      // Official 25-question NMT block variant: smart anti-repetition within official NMT structural order
+      // (e.g. Math: 1-6 Algebra single -> Functions/Graphs -> Geometry -> Matching -> Open-ended Numeric at the end)
+      pool = buildOfficialNmtSubjectBlock(subjectPool, 25, userStats);
     }
 
     if (pool.length === 0) return;
@@ -297,7 +301,7 @@ export default function App() {
     setActiveTab('subjects');
   };
 
-  // Handler to start Full 4-Subject NMT Simulation (Expanded question count: up to 128 questions)
+  // Handler to start Full 4-Subject NMT Simulation (Official NMT order within each subject block)
   const handleStartSimulation = (options: {
     isTimed: boolean;
     durationMinutes: number;
@@ -308,7 +312,7 @@ export default function App() {
     const orderedSubjects: SubjectId[] = ['ukr', 'math', 'history', 'eng'];
     const pool = orderedSubjects.flatMap((sId) => {
       const subPool = NMT_QUESTIONS.filter((q) => q.subjectId === sId);
-      return pickSmartShuffledQuestions(subPool, perSub, userStats);
+      return buildOfficialNmtSubjectBlock(subPool, perSub, userStats);
     });
 
     if (pool.length === 0) return;

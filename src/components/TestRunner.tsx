@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Question, SubjectId, TestSession, SubjectScoreBreakdown } from '../types/nmt';
 import { SUBJECT_METADATA, formatTime, calculateNmtScore, getCurrentNmtYear } from '../utils/scoring';
+import { getOfficialNmtSlotBadge } from '../utils/questionRandomizer';
+import { GeometryDiagram } from './GeometryDiagram';
 import {
   Clock,
   Flag,
@@ -446,9 +448,25 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
                 {session.title}
               </span>
             </div>
-            <h2 className="text-base font-bold text-zinc-950 mt-0.5">
-              Завдання {currentIndex + 1} з {totalStageQuestions} · {currentSubMeta.name}
-            </h2>
+            {(() => {
+              const subQs = stageQuestions.filter((q) => q.subjectId === currentQ.subjectId);
+              const subPos = subQs.findIndex((q) => q.id === currentQ.id) + 1;
+              const slotBadge = getOfficialNmtSlotBadge(currentQ);
+              return (
+                <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                  <h2 className="text-base font-bold text-zinc-950">
+                    {session.mode === 'simulation'
+                      ? `Завдання ${subPos} з ${subQs.length} · ${currentSubMeta.name}`
+                      : `Завдання ${currentIndex + 1} з ${totalStageQuestions} · ${currentSubMeta.name}`}
+                  </h2>
+                  {slotBadge && (
+                    <span className="px-2.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-[11px] font-semibold text-emerald-800">
+                      {slotBadge}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -565,36 +583,54 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
         {/* Question Numbers Navigation Grid */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto py-1">
-            {stageQuestions.map((q, idx) => {
-              const isCurrent = idx === currentIndex;
-              const isFlagged = session.flaggedQuestionIds.includes(q.id);
-              const isAnswered = isQuestionAnswered(q, session.userAnswers);
+            {stageQuestions
+              .map((q, stageIdx) => ({ q, stageIdx }))
+              .filter(({ q }) =>
+                session.mode === 'simulation' ? q.subjectId === currentQ.subjectId : true
+              )
+              .map(({ q, stageIdx }, localIdx) => {
+                const isCurrent = stageIdx === currentIndex;
+                const isFlagged = session.flaggedQuestionIds.includes(q.id);
+                const isAnswered = isQuestionAnswered(q, session.userAnswers);
 
-              let btnClass = 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 border-zinc-200';
-              if (isAnswered) {
-                btnClass = 'bg-zinc-800 text-white border-zinc-800';
-              }
-              if (isCurrent) {
-                btnClass = 'ring-2 ring-zinc-950 font-bold bg-white text-zinc-950 border-zinc-900';
-              }
+                let btnClass = 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 border-zinc-200';
+                if (q.type === 'numeric' && !isAnswered && !isCurrent) {
+                  btnClass = 'bg-amber-50/80 text-amber-900 hover:bg-amber-100 border-amber-300';
+                } else if (q.type === 'matching' && !isAnswered && !isCurrent) {
+                  btnClass = 'bg-blue-50/70 text-blue-900 hover:bg-blue-100 border-blue-200';
+                }
+                if (isAnswered) {
+                  btnClass = 'bg-zinc-800 text-white border-zinc-800';
+                }
+                if (isCurrent) {
+                  btnClass = 'ring-2 ring-zinc-950 font-bold bg-white text-zinc-950 border-zinc-900';
+                }
 
-              return (
-                <button
-                  key={q.id}
-                  type="button"
-                  onClick={() => {
-                    setCurrentIndex(idx);
-                    setShowExplanation(false);
-                  }}
-                  className={`relative w-8 h-8 rounded text-xs font-mono transition-all flex items-center justify-center border ${btnClass}`}
-                >
-                  <span>{idx + 1}</span>
-                  {isFlagged && (
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-white" />
-                  )}
-                </button>
-              );
-            })}
+                const typeLabel =
+                  q.type === 'numeric'
+                    ? 'Вписна відповідь (відкрита форма)'
+                    : q.type === 'matching'
+                    ? 'Встановлення відповідності'
+                    : 'Вибір однієї відповіді';
+
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => {
+                      setCurrentIndex(stageIdx);
+                      setShowExplanation(false);
+                    }}
+                    title={`№${localIdx + 1} · ${q.topic} (${typeLabel})`}
+                    className={`relative w-8 h-8 rounded text-xs font-mono transition-all flex items-center justify-center border ${btnClass}`}
+                  >
+                    <span>{localIdx + 1}</span>
+                    {isFlagged && (
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-white" />
+                    )}
+                  </button>
+                );
+              })}
           </div>
 
           <button
@@ -637,12 +673,37 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
           </button>
         </div>
 
-        {/* Question context */}
+        {/* Question context / NMT Reading Passage */}
         {currentQ.context && (
-          <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4 text-xs leading-relaxed text-zinc-800 italic">
-            {currentQ.context}
+          <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-4 sm:p-5 space-y-2.5 shadow-2xs">
+            <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-zinc-500 border-b border-zinc-200/80 pb-2">
+              <span className="flex items-center gap-1.5 text-zinc-700">
+                <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
+                <span>
+                  {currentQ.subjectId === 'eng'
+                    ? 'Reading Passage · Текст для читання (Рівень НМТ)'
+                    : 'Текст / Контекст до завдання'}
+                </span>
+              </span>
+              {currentQ.title && (
+                <span className="font-mono text-[11px] text-zinc-500 truncate max-w-[220px]">
+                  {currentQ.title}
+                </span>
+              )}
+            </div>
+            {currentQ.title && (
+              <h3 className="text-sm sm:text-base font-extrabold text-zinc-950 tracking-tight">
+                {currentQ.title}
+              </h3>
+            )}
+            <div className="text-sm leading-relaxed text-zinc-800 whitespace-pre-line font-normal">
+              {currentQ.context}
+            </div>
           </div>
         )}
+
+        {/* Geometry Diagram (Малюнок до геометричної задачі) */}
+        {currentQ.diagramId && <GeometryDiagram diagramId={currentQ.diagramId} />}
 
         {/* Question Text */}
         <div className="text-zinc-950 font-medium text-base sm:text-lg leading-relaxed whitespace-pre-line">

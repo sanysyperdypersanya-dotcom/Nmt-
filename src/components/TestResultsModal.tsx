@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { TestSession, SubjectId } from '../types/nmt';
-import { SUBJECT_METADATA, formatTime, getScoreDescriptor } from '../utils/scoring';
+import { SUBJECT_METADATA, formatTime, getScoreDescriptor, getCurrentNmtYear } from '../utils/scoring';
+import { GeometryDiagram } from './GeometryDiagram';
 import confetti from 'canvas-confetti';
 import {
   CheckCircle2,
@@ -66,7 +67,7 @@ export const TestResultsModal: React.FC<TestResultsModalProps> = ({
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
             {isSimulation
-              ? 'Сертифікат симуляції НМТ 2027'
+              ? `Сертифікат симуляції НМТ ${getCurrentNmtYear()}`
               : 'Результати тестування'}
           </h2>
           <div className="text-xs text-zinc-500 flex flex-wrap items-center justify-center gap-2">
@@ -267,6 +268,15 @@ export const TestResultsModal: React.FC<TestResultsModalProps> = ({
 
                   {isExpanded && (
                     <div className="p-4 bg-zinc-50/70 border-t border-zinc-100 space-y-3">
+                      {q.context && (
+                        <div className="p-3 bg-white border border-zinc-200 rounded-lg text-xs text-zinc-700 leading-relaxed whitespace-pre-line">
+                          {q.title && (
+                            <div className="font-bold text-zinc-950 mb-1">{q.title}</div>
+                          )}
+                          {q.context}
+                        </div>
+                      )}
+                      {q.diagramId && <GeometryDiagram diagramId={q.diagramId} compact />}
                       <div className="text-zinc-900 font-medium whitespace-pre-line">
                         {q.text}
                       </div>

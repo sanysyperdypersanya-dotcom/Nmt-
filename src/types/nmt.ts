@@ -40,6 +40,7 @@ export interface Question {
   maxPoints: number;
   explanation: string;
   formulaNote?: string;
+  diagramId?: string;
 }
 
 export interface SubjectMeta {
