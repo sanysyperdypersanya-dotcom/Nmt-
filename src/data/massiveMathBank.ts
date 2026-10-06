@@ -3,8 +3,8 @@ import { Question } from '../types/nmt';
 function generateMathTopicQuestions(): Question[] {
   const out: Question[] = [];
 
-  // 1. Арифметика та алгебра (50 додаткових завдань)
-  for (let i = 1; i <= 50; i++) {
+  // 1. Арифметика та алгебра (52 додаткових завдання)
+  for (let i = 1; i <= 52; i++) {
     const k = i + 2;
     const m = (i % 7) + 2;
     if (i % 3 === 0) {
@@ -211,8 +211,8 @@ function generateMathTopicQuestions(): Question[] {
     }
   }
 
-  // 5. Функції та їх графіки (50 додаткових завдань)
-  for (let i = 1; i <= 50; i++) {
+  // 5. Функції та їх графіки (52 додаткових завдання)
+  for (let i = 1; i <= 52; i++) {
     const k = i + 2;
     const b = (i % 7) + 1;
     if (i % 3 === 0) {
@@ -252,8 +252,8 @@ function generateMathTopicQuestions(): Question[] {
     }
   }
 
-  // 6. Рівняння та нерівності (50 додаткових завдань)
-  for (let i = 1; i <= 50; i++) {
+  // 6. Рівняння та нерівності (52 додаткових завдання)
+  for (let i = 1; i <= 52; i++) {
     const r1 = i + 1;
     const r2 = (i % 6) + 2;
     const sumRoots = r1 + r2;
@@ -294,8 +294,8 @@ function generateMathTopicQuestions(): Question[] {
     }
   }
 
-  // 7. Числові послідовності та прогресії (50 додаткових завдань)
-  for (let i = 1; i <= 50; i++) {
+  // 7. Числові послідовності та прогресії (52 додаткових завдання)
+  for (let i = 1; i <= 52; i++) {
     const a1 = i + 2;
     const d = (i % 5) + 2;
     const n = (i % 6) + 5;
@@ -347,7 +347,7 @@ function generateMathTopicQuestions(): Question[] {
     'math-geom-4',
     'math-geom-5',
   ];
-  for (let i = 1; i <= 48; i++) {
+  for (let i = 1; i <= 52; i++) {
     const diag = planDiagrams[i % planDiagrams.length];
     if (i % 3 === 0) {
       const d1 = (i % 9 + 3) * 2;
@@ -413,8 +413,8 @@ function generateMathTopicQuestions(): Question[] {
     }
   }
 
-  // 9. Стереометрія (48 додаткових завдань із 3D-рисунками)
-  for (let i = 1; i <= 48; i++) {
+  // 9. Стереометрія (52 додаткових завдання із 3D-рисунками)
+  for (let i = 1; i <= 52; i++) {
     if (i % 3 === 0) {
       const a = (i % 7) + 2;
       const b = (i % 5) + 3;
@@ -522,8 +522,8 @@ function generateMathTopicQuestions(): Question[] {
     }
   }
 
-  // 11. Похідна та інтеграл (50 додаткових завдань)
-  for (let i = 1; i <= 50; i++) {
+  // 11. Похідна та інтеграл (52 додаткових завдання)
+  for (let i = 1; i <= 52; i++) {
     const a = (i % 5) + 2;
     const b = i + 3;
     const x0 = (i % 4) + 1;
@@ -562,8 +562,8 @@ function generateMathTopicQuestions(): Question[] {
     }
   }
 
-  // 12. Теорія ймовірностей (50 додаткових завдань)
-  for (let i = 1; i <= 50; i++) {
+  // 12. Теорія ймовірностей (52 додаткових завдання)
+  for (let i = 1; i <= 52; i++) {
     const fav = (i % 7) + 3;
     const total = 20;
     const prob = fav / total;
