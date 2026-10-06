@@ -32,7 +32,8 @@ interface SubjectSelectorProps {
     mode: 'full' | 'blitz' | 'topic',
     topicFilter?: string,
     overrideTimed?: boolean,
-    overrideMinutes?: number
+    overrideMinutes?: number,
+    topicQuestionCount?: number
   ) => void;
   onStartSimulation: (options: {
     isTimed: boolean;
@@ -621,18 +622,18 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
         />
       </div>
 
-      {/* 6. DEDICATED TOPIC TESTS CATALOG: Каталог тестів за всіма темами НМТ */}
+      {/* 6. DEDICATED TOPIC TESTS CATALOG: Каталог тестів за всіма темами НМТ (50+ тестів у кожній темі) */}
       <div className="bg-white border border-zinc-200 rounded-2xl p-6 sm:p-7 shadow-xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-4">
           <div>
             <div className="flex items-center gap-2">
               <ListChecks className="w-5 h-5 text-zinc-900" />
               <h3 className="text-lg font-bold text-zinc-950">
-                Тренувальні тести за всіма 44 темами (УЦОЯО · ЗНО UA · Просте ЗНО)
+                Тренувальні тести за всіма 44 темами (50+ завдань у кожній темі · ЗНО UA · Просте ЗНО)
               </h3>
             </div>
             <p className="text-xs text-zinc-500 mt-0.5">
-              Оберіть предмет і конкретну тему програми, щоб прицільно відпрацювати завдання з офіційних баз НМТ, ЗНО UA та Просте ЗНО
+              У кожній із 44 тем зібрано понад 50 тренувальних завдань за програмою УЦОЯО, ЗНО UA та Просте ЗНО ({NMT_QUESTIONS.length} питань у загальній базі)
             </p>
           </div>
 
@@ -708,14 +709,28 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => onStartTest(topicCatalogSubject, 'topic', topic)}
-                  className="w-full py-2 px-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <Play className="w-3 h-3 fill-white" />
-                  <span>Пройти тест за темою</span>
-                </button>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onStartTest(topicCatalogSubject, 'topic', topic, undefined, undefined, 20)
+                    }
+                    className="py-2 px-2.5 bg-white hover:bg-zinc-100 border border-zinc-300 text-zinc-800 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
+                    title="Швидкий тренувальний зріз на 20 випадкових завдань із теми"
+                  >
+                    <span>20 питань</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onStartTest(topicCatalogSubject, 'topic', topic)}
+                    className="py-2 px-2.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                    title={`Пройти повний тематичний блок з усіх ${topicQuestions.length} завдань`}
+                  >
+                    <Play className="w-3 h-3 fill-white" />
+                    <span>Усі {topicQuestions.length} пит.</span>
+                  </button>
+                </div>
               </div>
             );
           })}

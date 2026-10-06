@@ -191,14 +191,15 @@ export default function App() {
     mode: 'full' | 'blitz' | 'topic',
     topicFilter?: string,
     overrideTimed?: boolean,
-    overrideMinutes?: number
+    overrideMinutes?: number,
+    topicQuestionCount?: number
   ) => {
     const subjectPool = NMT_QUESTIONS.filter((q) => q.subjectId === subjectId);
     let pool: Question[] = [];
 
     if (mode === 'topic' && topicFilter) {
       const topicPool = subjectPool.filter((q) => q.topic === topicFilter);
-      pool = pickSmartShuffledQuestions(topicPool, undefined, userStats);
+      pool = pickSmartShuffledQuestions(topicPool, topicQuestionCount, userStats);
     } else if (mode === 'blitz') {
       // Strictly 5 smart-shuffled questions with anti-repetition cooldown
       pool = pickSmartShuffledQuestions(subjectPool, 5, userStats);
@@ -217,7 +218,7 @@ export default function App() {
         : mode === 'blitz'
         ? 5
         : mode === 'topic'
-        ? 10
+        ? Math.max(15, Math.ceil(pool.length * 1.4))
         : customSingleMinutes;
 
     const title =
@@ -225,7 +226,7 @@ export default function App() {
         ? `Демонстраційний варіант НМТ (${pool.length} завдань)`
         : mode === 'blitz'
         ? `Бліц-тест (5 завдань)`
-        : `Тема: ${topicFilter}`;
+        : `Тема: ${topicFilter} (${pool.length} пит.)`;
 
     const newSession: TestSession = {
       id: `test-${Date.now()}`,

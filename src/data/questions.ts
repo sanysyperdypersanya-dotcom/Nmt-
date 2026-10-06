@@ -1,6 +1,10 @@
 import { Question } from '../types/nmt';
 import { EXTRA_NMT_QUESTIONS } from './extraQuestions';
 import { ZNO_PROSTE_QUESTIONS } from './znoProsteQuestions';
+import { MASSIVE_UKR_QUESTIONS } from './massiveUkrBank';
+import { MASSIVE_MATH_QUESTIONS } from './massiveMathBank';
+import { MASSIVE_HISTORY_QUESTIONS } from './massiveHistoryBank';
+import { MASSIVE_ENG_QUESTIONS } from './massiveEngBank';
 
 export const NMT_QUESTIONS: Question[] = [
   // ==========================================
@@ -1107,4 +1111,8 @@ export const NMT_QUESTIONS: Question[] = [
   },
   ...EXTRA_NMT_QUESTIONS,
   ...ZNO_PROSTE_QUESTIONS,
+  ...MASSIVE_UKR_QUESTIONS,
+  ...MASSIVE_MATH_QUESTIONS,
+  ...MASSIVE_HISTORY_QUESTIONS,
+  ...MASSIVE_ENG_QUESTIONS,
 ];

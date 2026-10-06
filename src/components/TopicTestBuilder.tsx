@@ -70,10 +70,10 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
     setSelectedTopics(allTopics);
     setSourceFilter('all');
     const totalForSub = Math.min(
-      32,
+      60,
       NMT_QUESTIONS.filter((q) => q.subjectId === subId).length
     );
-    setQuestionCount(Math.min(16, totalForSub));
+    setQuestionCount(Math.min(25, totalForSub));
   };
 
   // Update when external isTimedDefault changes
@@ -89,7 +89,7 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
       matchesSource(q, sourceFilter)
   );
 
-  const maxQuestions = Math.min(32, availablePool.length);
+  const maxQuestions = Math.min(60, availablePool.length);
 
   // Clamp questionCount whenever availablePool changes
   useEffect(() => {
@@ -107,7 +107,7 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
       const exists = prev.includes(topic);
       const next = exists ? prev.filter((t) => t !== topic) : [...prev, topic];
       const nextPoolLen = Math.min(
-        32,
+        60,
         NMT_QUESTIONS.filter(
           (q) =>
             q.subjectId === selectedSubject &&
@@ -128,12 +128,12 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
     const all = SUBJECT_METADATA[selectedSubject].topics;
     setSelectedTopics(all);
     const maxLen = Math.min(
-      32,
+      60,
       NMT_QUESTIONS.filter(
         (q) => q.subjectId === selectedSubject && matchesSource(q, sourceFilter)
       ).length
     );
-    setQuestionCount(maxLen);
+    setQuestionCount(Math.min(50, maxLen));
   };
 
   const handleClearTopics = () => {
@@ -185,7 +185,7 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
             <span>Персональний конструктор тестів НМТ · ЗНО UA · Просте ЗНО</span>
           </div>
           <h3 className="text-xl font-extrabold text-zinc-950">
-            Зберіть власний тест за обраними темами та базою завдань (від 1 до 32 питань)
+            Зберіть власний тест за обраними темами та базою завдань (від 1 до 60 питань)
           </h3>
           <p className="text-xs text-zinc-600">
             Оберіть дисципліну, джерело питань (УЦОЯО, ЗНО UA, Просте ЗНО), позначте потрібні теми та згенеруйте об’єднаний тест.
@@ -353,7 +353,7 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
               2. Кількість питань у тесті (залежно від обраних тем):
             </label>
             <span className="font-mono text-sm font-extrabold text-zinc-950 bg-zinc-100 px-3 py-1 rounded-lg">
-              {questionCount} з {availablePool.length} доступних (ліміт тесту: 32)
+              {questionCount} з {availablePool.length} доступних (до 60 за раз)
             </span>
           </div>
 
@@ -392,7 +392,7 @@ export const TopicTestBuilder: React.FC<TopicTestBuilderProps> = ({
           {/* Quick count presets */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[11px] text-zinc-500 mr-1">Швидкий вибір:</span>
-            {[1, 5, 10, 16, 24, maxQuestions]
+            {[5, 15, 25, 40, 50, maxQuestions]
               .filter((v, i, arr) => v >= 1 && v <= maxQuestions && arr.indexOf(v) === i)
               .map((val) => (
                 <button
